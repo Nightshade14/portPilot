@@ -519,7 +519,7 @@ class LocalSandboxManager:
     def sandbox(self, run_id: str):
         from strands.sandbox.not_a_sandbox_local_environment import NotASandboxLocalEnvironment
 
-        return NotASandboxLocalEnvironment(working_dir=str(self._ws(run_id) / "repo"))
+        return NotASandboxLocalEnvironment()
 
     def commit(self, run_id: str, message: str) -> str:
         repo = str(self._ws(run_id) / "repo")

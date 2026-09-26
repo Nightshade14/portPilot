@@ -76,3 +76,9 @@ def test_local_sandbox_commit_restore():
     assert sbx.read_file("r1", "/workspace/repo/a.txt") == "one"
     assert sbx.export_archive("r1")[:2] == b"\x1f\x8b"
     shutil.rmtree(root, ignore_errors=True)
+
+
+def test_local_sandbox_returns_a_strands_environment():
+    sandbox = LocalSandboxManager(REPO_ROOT).sandbox("r1")
+
+    assert type(sandbox).__name__ == "NotASandboxLocalEnvironment"

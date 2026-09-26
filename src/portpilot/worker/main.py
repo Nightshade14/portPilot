@@ -149,10 +149,10 @@ def main() -> None:
             f"Underlying import error: {exc}"
         ) from exc
 
-    from portpilot.api.deps import build_api_deps
+    from portpilot.agent.runtime import build_agent_deps
 
     def build_deps() -> Any:
-        return build_api_deps(settings)
+        return build_agent_deps(settings)
 
     worker = Worker(settings, build_deps, run_migration, poll_s=3)
     worker.install_signal_handlers()
