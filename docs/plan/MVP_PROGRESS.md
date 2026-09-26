@@ -53,7 +53,7 @@ The durable state of the parent orchestrator, used to resume after context compa
 |---|---|---|---|
 | M Mongo state | 75cf03ed | ../portPilot-mvp-m / mvp/m | merged (ae02bba); 92 mongo contract tests green |
 | K Knowledge | 7ce04612 | ../portPilot-mvp-k / mvp/k | merged (3be9c91); live Atlas+Voyage test passed; 2 prod indexes exist on portpilot_mvp.knowledge |
-| S Sandbox | ef1f1afd | ../portPilot-mvp-s / mvp/s | running |
+| S Sandbox | ef1f1afd | ../portPilot-mvp-s / mvp/s | merged (41ae075); Lead verified trivy/hadolint/dive installs + nmap refused; pp-buildkitd + pp-net left running |
 | E Evals | 0fc24161 | ../portPilot-mvp-e / mvp/e | merged (a3daada); baselines E2 424MB 228 CRIT, E3 441MB 227 CRIT |
 | F Frontend | b125ea09 | ../portPilot-mvp-f / mvp/f | running |
 | A Agent core | 7fcada94 | ../portPilot-mvp-a / mvp/a | running (delegated per user request) |

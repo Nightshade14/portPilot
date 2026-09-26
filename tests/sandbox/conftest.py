@@ -52,11 +52,14 @@ def manager() -> Iterator[DockerSandboxManager]:
 
 
 @pytest.fixture
-def local_repo(tmp_path):
+def local_repo():
     """A tiny git repo on the host, for `allow_local_repos=True` tests -- avoids
-    needing network access for the core `docker` marker suite."""
-    repo = tmp_path / "repo"
-    repo.mkdir()
+    needing network access for the core `docker` marker suite. Lives under the
+    gitignored runs/_pytest/ because git cannot use $TMPDIR in some sandboxes."""
+    from portpilot.core.config import REPO_ROOT
+
+    repo = REPO_ROOT / "runs" / "_pytest" / f"sbx-{uuid.uuid4().hex[:8]}" / "repo"
+    repo.mkdir(parents=True)
     (repo / "README.md").write_text("hello\n")
     for args in (
         ["init", "-q"],
@@ -69,4 +72,7 @@ def local_repo(tmp_path):
         check=True,
         capture_output=True,
     )
-    return repo
+    yield repo
+    import shutil
+
+    shutil.rmtree(repo.parent, ignore_errors=True)

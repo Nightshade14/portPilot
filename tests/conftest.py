@@ -101,3 +101,21 @@ def load_demo():
 def make_fake_store():
     """Return a factory ``make_fake_store(name) -> FakeStore`` from a fixture."""
     return lambda name: FakeStore(_load_fixture(name))
+
+
+# Opt-in gates for expensive or external test markers. A plain `uv run pytest` stays
+# offline and fast; set PORTPILOT_TEST_<MARKER>=1 (e.g. PORTPILOT_TEST_DOCKER=1) to run
+# them. Markers backed by a URI env var (mongo, atlas_local, atlas) skip themselves.
+_OPT_IN_MARKERS = ("docker", "network", "llm", "live_atlas", "live_voyage", "chaos")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    import os
+
+    for item in items:
+        for marker in _OPT_IN_MARKERS:
+            if marker in item.keywords and os.getenv(f"PORTPILOT_TEST_{marker.upper()}") != "1":
+                item.add_marker(
+                    pytest.mark.skip(reason=f"set PORTPILOT_TEST_{marker.upper()}=1 to run")
+                )
+                break
