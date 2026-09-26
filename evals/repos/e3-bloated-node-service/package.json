@@ -1,0 +1,14 @@
+{
+  "name": "e3-bloated-node-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Small Express bookmark API with a deliberately bloated Dockerfile (eval fixture).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test.js"
+  },
+  "dependencies": {
+    "express": "4.21.2"
+  }
+}
