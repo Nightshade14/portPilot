@@ -1,0 +1,112 @@
+{
+  "_meta": {
+    "dive_image": "wagoodman/dive:v0.13.1@sha256:f1886e6c32c094fc41a623c1989f5cb3e48aa766da5f0be233f911fc1d85ce10",
+    "generated_at": "2026-09-26T18:47:38Z",
+    "hadolint_image": "hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d",
+    "trivy_image": "aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
+  },
+  "e2": {
+    "build_seconds": 14.1,
+    "dive": {
+      "efficiency_score": 0.9478711671832843,
+      "inefficient_bytes": 109715887,
+      "size_bytes": 1126714945
+    },
+    "hadolint": {
+      "exit_code": 1,
+      "findings": [
+        {
+          "code": "DL3008",
+          "column": 1,
+          "file": "-",
+          "level": "warning",
+          "line": 7,
+          "message": "Pin versions in apt get install. Instead of `apt-get install <package>` use `apt-get install <package>=<version>`"
+        },
+        {
+          "code": "DL3009",
+          "column": 1,
+          "file": "-",
+          "level": "info",
+          "line": 7,
+          "message": "Delete the apt lists (/var/lib/apt/lists) after installing something"
+        },
+        {
+          "code": "DL3015",
+          "column": 1,
+          "file": "-",
+          "level": "info",
+          "line": 7,
+          "message": "Avoid additional packages by specifying `--no-install-recommends`"
+        },
+        {
+          "code": "DL3042",
+          "column": 1,
+          "file": "-",
+          "level": "warning",
+          "line": 12,
+          "message": "Avoid use of cache directory with pip. Use `pip install --no-cache-dir <package>`"
+        }
+      ],
+      "findings_count": 4
+    },
+    "image_size_bytes": 424752640,
+    "image_tag": "pp-test-e-e2:baseline",
+    "repo": "e2",
+    "trivy": {
+      "CRITICAL": 228,
+      "HIGH": 2473,
+      "LOW": 2129,
+      "MEDIUM": 6869,
+      "UNKNOWN": 444
+    }
+  },
+  "e3": {
+    "build_seconds": 31.3,
+    "dive": {
+      "efficiency_score": 0.9522492628453534,
+      "inefficient_bytes": 108712968,
+      "size_bytes": 1205476699
+    },
+    "hadolint": {
+      "exit_code": 1,
+      "findings": [
+        {
+          "code": "DL3008",
+          "column": 1,
+          "file": "-",
+          "level": "warning",
+          "line": 7,
+          "message": "Pin versions in apt get install. Instead of `apt-get install <package>` use `apt-get install <package>=<version>`"
+        },
+        {
+          "code": "DL3009",
+          "column": 1,
+          "file": "-",
+          "level": "info",
+          "line": 7,
+          "message": "Delete the apt lists (/var/lib/apt/lists) after installing something"
+        },
+        {
+          "code": "DL3015",
+          "column": 1,
+          "file": "-",
+          "level": "info",
+          "line": 7,
+          "message": "Avoid additional packages by specifying `--no-install-recommends`"
+        }
+      ],
+      "findings_count": 3
+    },
+    "image_size_bytes": 441512448,
+    "image_tag": "pp-test-e-e3:baseline",
+    "repo": "e3",
+    "trivy": {
+      "CRITICAL": 227,
+      "HIGH": 2071,
+      "LOW": 2059,
+      "MEDIUM": 5899,
+      "UNKNOWN": 439
+    }
+  }
+}
