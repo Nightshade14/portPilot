@@ -1,178 +1,228 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { fixtures } from "@/lib/fixtures";
-import { getApiBaseUrl, isFixturesMode } from "@/lib/api";
-import { isAllowed } from "@/lib/proxy-allowlist";
+import { type NextRequest, NextResponse } from "next/server";
+import * as fx from "@/lib/data";
 
 /**
- * Proxies /api/pp/* to the PortPilot API (PORTPILOT_API_URL), attaching the
- * server-side bearer token. Falls back to fixtures when no API URL is
- * configured. Only forwards GETs on contract paths, plus POST on
- * runs, runs/*\/pause, runs/*\/resume and runs/*\/cancel. Streams downloads.
+ * PortPilot API proxy.
+ *
+ * The browser calls `/api/pp/<path>` and this route forwards allowlisted
+ * paths to `${PORTPILOT_API_URL}/api/<path>`, attaching the bearer token
+ * server-side so it is never exposed to the client. When no API URL is
+ * configured it serves fixture data with the same response shapes, keeping
+ * the console usable in local/preview environments.
  */
 
-function errorResponse(status: number, code: string, message: string) {
+export const dynamic = "force-dynamic";
+
+const GET_ALLOW: RegExp[] = [
+  /^health$/,
+  /^runs$/,
+  /^runs\/[^/]+$/,
+  /^runs\/[^/]+\/steps\/[^/]+$/,
+  /^runs\/[^/]+\/events$/,
+  /^runs\/[^/]+\/artifacts$/,
+  /^runs\/[^/]+\/artifacts\/[^/]+$/,
+  /^runs\/[^/]+\/download$/,
+  /^tools$/,
+  /^tools\/[^/]+$/,
+  /^knowledge\/search$/,
+  /^knowledge$/,
+];
+
+const POST_ALLOW: RegExp[] = [
+  /^runs$/,
+  /^runs\/[^/]+\/pause$/,
+  /^runs\/[^/]+\/resume$/,
+  /^runs\/[^/]+\/cancel$/,
+];
+
+function apiBase(): string | null {
+  const base = process.env.PORTPILOT_API_URL;
+  return base && base.length > 0 ? base.replace(/\/+$/, "") : null;
+}
+
+function err(status: number, code: string, message: string) {
   return NextResponse.json({ error: { code, message } }, { status });
 }
 
-async function handle(request: NextRequest, path: string[], method: "GET" | "POST"): Promise<Response> {
-  const joinedPath = path.join("/");
-
-  if (!isAllowed(method, joinedPath)) {
-    return errorResponse(404, "not_found", "This path is not exposed by the proxy.");
-  }
-
-  if (isFixturesMode()) {
-    return handleFixtures(joinedPath, method, request);
-  }
-
-  return handleUpstream(joinedPath, method, request);
-}
-
-async function handleUpstream(joinedPath: string, method: "GET" | "POST", request: NextRequest): Promise<Response> {
-  const base = getApiBaseUrl();
+async function forward(path: string, method: string, req: NextRequest) {
+  const base = apiBase() as string;
   const token = process.env.PORTPILOT_API_TOKEN;
-  const url = new URL(`${base}/api/${joinedPath}`);
-  request.nextUrl.searchParams.forEach((value, key) => url.searchParams.set(key, value));
 
-  const isDownload = /\/download$/.test(joinedPath);
-  const body = method === "POST" ? await request.text() : undefined;
+  const url = new URL(`${base}/api/${path}`);
+  req.nextUrl.searchParams.forEach((value, key) =>
+    url.searchParams.set(key, value),
+  );
 
-  const upstream = await fetch(url.toString(), {
+  const isDownload = /\/download$/.test(path);
+  const body = method === "POST" ? await req.text() : undefined;
+
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body !== undefined && body.length > 0) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const res = await fetch(url.toString(), {
     method,
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-    },
+    headers,
     body,
     cache: "no-store",
   });
 
   if (isDownload) {
-    // Stream the tar.gz through without buffering it in memory.
-    return new Response(upstream.body, {
-      status: upstream.status,
+    return new Response(res.body, {
+      status: res.status,
       headers: {
-        "Content-Type": upstream.headers.get("Content-Type") ?? "application/gzip",
-        "Content-Disposition": upstream.headers.get("Content-Disposition") ?? "attachment",
+        "Content-Type": res.headers.get("Content-Type") ?? "application/gzip",
+        "Content-Disposition":
+          res.headers.get("Content-Disposition") ?? "attachment",
       },
     });
   }
 
-  const text = await upstream.text();
-  return new Response(text, {
-    status: upstream.status,
-    headers: { "Content-Type": upstream.headers.get("Content-Type") ?? "application/json" },
+  return new Response(await res.text(), {
+    status: res.status,
+    headers: {
+      "Content-Type": res.headers.get("Content-Type") ?? "application/json",
+    },
   });
 }
 
-async function handleFixtures(joinedPath: string, method: "GET" | "POST", request: NextRequest): Promise<Response> {
-  const q = request.nextUrl.searchParams;
+async function fixtureFallback(
+  path: string,
+  method: string,
+  req: NextRequest,
+) {
+  const params = req.nextUrl.searchParams;
 
-  if (joinedPath === "health") {
+  if (path === "health") {
     return NextResponse.json({ ok: true, version: "0.1.0-fixtures" });
   }
 
-  if (joinedPath === "runs" && method === "GET") {
-    const limit = Number(q.get("limit") ?? 50);
-    return NextResponse.json({ runs: await fixtures.listRuns(limit) });
+  if (path === "runs" && method === "GET") {
+    const limit = Number(params.get("limit") ?? 50);
+    return NextResponse.json({ runs: fx.fxListRuns(limit) });
   }
 
-  if (joinedPath === "runs" && method === "POST") {
-    const body = (await request.json()) as { repo_url?: string; goal?: string };
+  if (path === "runs" && method === "POST") {
+    const body = (await req.json().catch(() => ({}))) as {
+      repo_url?: string;
+      goal?: string;
+    };
     if (!body.repo_url || !body.goal) {
-      return errorResponse(400, "bad_request", "repo_url and goal are required.");
+      return err(400, "bad_request", "repo_url and goal are required.");
     }
-    const runId = await fixtures.createRun(body.repo_url, body.goal);
+    const runId = fx.fxCreateRun(body.repo_url, body.goal);
     return NextResponse.json({ run_id: runId }, { status: 201 });
   }
 
-  const runMatch = joinedPath.match(/^runs\/([^/]+)$/);
-  if (runMatch && method === "GET") {
-    const result = await fixtures.getRun(runMatch[1]!);
-    if (!result) return errorResponse(404, "not_found", "Run not found.");
-    return NextResponse.json(result);
+  let m = path.match(/^runs\/([^/]+)$/);
+  if (m && method === "GET") {
+    const bundle = fx.fxGetRunBundle(m[1]);
+    return bundle ? NextResponse.json(bundle) : err(404, "not_found", "Run not found.");
   }
 
-  const stepMatch = joinedPath.match(/^runs\/([^/]+)\/steps\/([^/]+)$/);
-  if (stepMatch && method === "GET") {
-    const step = await fixtures.getStep(stepMatch[1]!, stepMatch[2]!);
-    if (!step) return errorResponse(404, "not_found", "Step not found.");
-    return NextResponse.json({ step });
+  m = path.match(/^runs\/([^/]+)\/steps\/([^/]+)$/);
+  if (m && method === "GET") {
+    const step = fx.fxGetStep(m[1], m[2]);
+    return step
+      ? NextResponse.json({ step })
+      : err(404, "not_found", "Step not found.");
   }
 
-  const eventsMatch = joinedPath.match(/^runs\/([^/]+)\/events$/);
-  if (eventsMatch && method === "GET") {
-    const afterSeq = Number(q.get("after_seq") ?? 0);
-    const limit = Number(q.get("limit") ?? 200);
-    return NextResponse.json(await fixtures.getEvents(eventsMatch[1]!, afterSeq, limit));
+  m = path.match(/^runs\/([^/]+)\/events$/);
+  if (m && method === "GET") {
+    const afterSeq = Number(params.get("after_seq") ?? 0);
+    const limit = Number(params.get("limit") ?? 200);
+    return NextResponse.json(fx.fxGetEvents(m[1], afterSeq, limit));
   }
 
-  const controlMatch = joinedPath.match(/^runs\/([^/]+)\/(pause|resume|cancel)$/);
-  if (controlMatch && method === "POST") {
-    const result = await fixtures.controlRun(controlMatch[1]!, controlMatch[2] as "pause" | "resume" | "cancel");
-    if (!result) return errorResponse(404, "not_found", "Run not found.");
-    return NextResponse.json(result);
+  m = path.match(/^runs\/([^/]+)\/(pause|resume|cancel)$/);
+  if (m && method === "POST") {
+    const result = fx.fxControlRun(m[1], m[2]);
+    return result
+      ? NextResponse.json(result)
+      : err(404, "not_found", "Run not found.");
   }
 
-  const artifactsMatch = joinedPath.match(/^runs\/([^/]+)\/artifacts$/);
-  if (artifactsMatch && method === "GET") {
-    return NextResponse.json({ artifacts: await fixtures.getArtifacts(artifactsMatch[1]!) });
+  m = path.match(/^runs\/([^/]+)\/artifacts$/);
+  if (m && method === "GET") {
+    return NextResponse.json({ artifacts: fx.fxGetArtifacts(m[1]) });
   }
 
-  const artifactMatch = joinedPath.match(/^runs\/([^/]+)\/artifacts\/([^/]+)$/);
-  if (artifactMatch && method === "GET") {
-    const artifact = await fixtures.getArtifact(artifactMatch[1]!, artifactMatch[2]!);
-    if (!artifact) return errorResponse(404, "not_found", "Artifact not found.");
-    return NextResponse.json({ artifact });
+  m = path.match(/^runs\/([^/]+)\/artifacts\/([^/]+)$/);
+  if (m && method === "GET") {
+    const artifact = fx.fxGetArtifact(m[1], m[2]);
+    return artifact
+      ? NextResponse.json({ artifact })
+      : err(404, "not_found", "Artifact not found.");
   }
 
-  const downloadMatch = joinedPath.match(/^runs\/([^/]+)\/download$/);
-  if (downloadMatch && method === "GET") {
-    const body = `Fixture placeholder archive for ${downloadMatch[1]}.\n`;
-    return new Response(body, {
-      status: 200,
+  m = path.match(/^runs\/([^/]+)\/download$/);
+  if (m && method === "GET") {
+    return new Response(`Fixture placeholder archive for ${m[1]}.\n`, {
       headers: {
-        "Content-Type": "application/gzip",
-        "Content-Disposition": `attachment; filename="${downloadMatch[1]}.tar.gz"`,
+        "Content-Type": "text/plain",
+        "Content-Disposition": `attachment; filename="${m[1]}.txt"`,
       },
     });
   }
 
-  if (joinedPath === "tools" && method === "GET") {
-    const status = q.get("status") ?? undefined;
-    return NextResponse.json({ tools: await fixtures.listTools(status as never) });
+  if (path === "tools" && method === "GET") {
+    const status = params.get("status") ?? undefined;
+    return NextResponse.json({ tools: fx.fxListTools(status) });
   }
 
-  const toolMatch = joinedPath.match(/^tools\/([^/]+)$/);
-  if (toolMatch && method === "GET") {
-    const versions = await fixtures.getTool(toolMatch[1]!);
-    if (!versions) return errorResponse(404, "not_found", "Tool not found.");
-    return NextResponse.json({ name: toolMatch[1], versions });
+  m = path.match(/^tools\/([^/]+)$/);
+  if (m && method === "GET") {
+    const versions = fx.fxGetToolVersions(m[1]);
+    return versions
+      ? NextResponse.json({ name: m[1], versions })
+      : err(404, "not_found", "Tool not found.");
   }
 
-  if (joinedPath === "knowledge/search" && method === "GET") {
-    const query = q.get("q") ?? "";
-    const kinds = q.get("kinds") ?? undefined;
-    const limit = Number(q.get("limit") ?? 10);
-    return NextResponse.json({ hits: await fixtures.searchKnowledge(query, kinds, limit) });
+  if (path === "knowledge/search" && method === "GET") {
+    const q = params.get("q") ?? "";
+    const kinds = params.get("kinds") ?? undefined;
+    const limit = Number(params.get("limit") ?? 10);
+    return NextResponse.json({ hits: fx.fxSearchKnowledge(q, kinds, limit) });
   }
 
-  if (joinedPath === "knowledge" && method === "GET") {
-    const kinds = q.get("kinds") ?? undefined;
-    const runId = q.get("run_id") ?? undefined;
-    const limit = Number(q.get("limit") ?? 100);
-    return NextResponse.json({ items: await fixtures.listKnowledge(kinds, runId, limit) });
+  if (path === "knowledge" && method === "GET") {
+    const kinds = params.get("kinds") ?? undefined;
+    const runId = params.get("run_id") ?? undefined;
+    const limit = Number(params.get("limit") ?? 100);
+    return NextResponse.json({ items: fx.fxListKnowledge(kinds, runId, limit) });
   }
 
-  return errorResponse(404, "not_found", "No fixture for this path.");
+  return err(404, "not_found", "No fixture for this path.");
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
-  const { path } = await params;
-  return handle(request, path, "GET");
+async function handle(req: NextRequest, pathParts: string[], method: string) {
+  const path = (pathParts ?? []).join("/");
+  const allow = method === "GET" ? GET_ALLOW : method === "POST" ? POST_ALLOW : [];
+
+  if (!allow.some((re) => re.test(path))) {
+    return err(404, "not_found", "This path is not exposed by the proxy.");
+  }
+
+  return apiBase() === null
+    ? fixtureFallback(path, method, req)
+    : forward(path, method, req);
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
   const { path } = await params;
-  return handle(request, path, "POST");
+  return handle(req, path, "GET");
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
+  const { path } = await params;
+  return handle(req, path, "POST");
 }
