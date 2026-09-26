@@ -144,23 +144,34 @@ def test_resume_not_found_exit_1(completed_store, monkeypatch):
     assert "not found" in result.output
 
 
-# --- contracts / seed lazy-import degradation -------------------------------
+# --- contracts / seed delegate to Lanes A and B ------------------------------
 
 
-def test_contracts_not_implemented_exit_2(completed_store):
-    # Lane A's portpilot.contracts.cli module does not exist yet; the lazy
-    # import raises ImportError, which the CLI catches.
-    result = runner.invoke(cli.app, ["contracts", "--source-only"])
-    assert result.exit_code == 2
-    assert "not implemented yet" in result.output
-    assert "Traceback" not in result.output
+def test_contracts_exits_with_contracts_command_return_code(monkeypatch):
+    import portpilot.contracts.cli as contracts_cli
+
+    calls = []
+
+    def _fake(source_only, target):
+        calls.append((source_only, target))
+        return 1
+
+    monkeypatch.setattr(contracts_cli, "contracts_command", _fake)
+    result = runner.invoke(cli.app, ["contracts", "--target", "some/dir"])
+    assert result.exit_code == 1
+    assert calls == [(False, "some/dir")]
 
 
-def test_seed_not_implemented_exit_2(completed_store):
-    # Lane B's portpilot.store.seed module does not exist yet.
+def test_seed_installs_v1_as_active_policy(monkeypatch):
+    from portpilot.config import POLICY_NAME
+    from portpilot.store.memory import InMemoryStore
+
+    store = InMemoryStore()
+    monkeypatch.setattr(cli, "get_store", lambda: store)
     result = runner.invoke(cli.app, ["seed"])
-    assert result.exit_code == 2
-    assert "not implemented yet" in result.output
+    assert result.exit_code == 0, result.output
+    assert "seeded" in result.output
+    assert store.get_policy(POLICY_NAME).version == 1
 
 
 def test_help_lists_all_commands():
