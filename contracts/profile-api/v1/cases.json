@@ -1,0 +1,96 @@
+{
+  "suite": "profile-api",
+  "version": 1,
+  "cases": [
+    {
+      "id": "normalize_happy_path",
+      "category": "success",
+      "request": {"method": "POST", "path": "/profiles/normalize",
+                  "json": {"name": "Ada Lovelace", "email": "ada@example.com", "age": 36,
+                           "country": "GB", "newsletter": true, "tags": ["math"]}},
+      "expect_status": 200,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "normalize_coerces_numeric_strings",
+      "category": "coercion",
+      "request": {"method": "POST", "path": "/profiles/normalize",
+                  "json": {"name": "Ada", "email": "ada@example.com", "age": " 042 ",
+                           "country": "GB", "newsletter": true, "tags": []}},
+      "expect_status": 200,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "normalize_applies_defaults",
+      "category": "defaults",
+      "request": {"method": "POST", "path": "/profiles/normalize",
+                  "json": {"name": "Grace Hopper", "email": "grace@example.com", "age": "4.5"}},
+      "expect_status": 200,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "normalize_trims_and_lowercases_email",
+      "category": "transform",
+      "request": {"method": "POST", "path": "/profiles/normalize",
+                  "json": {"name": "  Ada  ", "email": " ADA@X.IO ", "age": 36}},
+      "expect_status": 200,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "normalize_rejects_invalid_payload_with_422",
+      "category": "error-status",
+      "request": {"method": "POST", "path": "/profiles/normalize",
+                  "json": {"email": "ada@example.com", "age": -3}},
+      "expect_status": 422,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "validate_accepts_valid_payload",
+      "category": "success",
+      "request": {"method": "POST", "path": "/profiles/validate",
+                  "json": {"name": "Ada", "email": "ada@example.com", "age": "36"}},
+      "expect_status": 200,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "validate_missing_required_field_returns_422",
+      "category": "error-schema",
+      "request": {"method": "POST", "path": "/profiles/validate",
+                  "json": {"name": "Ada", "age": 30}},
+      "expect_status": 422,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "validate_uncoercible_age_returns_422",
+      "category": "error-schema",
+      "request": {"method": "POST", "path": "/profiles/validate",
+                  "json": {"name": "Ada", "email": "ada@example.com", "age": "forty"}},
+      "expect_status": 422,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "get_profile_found",
+      "category": "success",
+      "request": {"method": "GET", "path": "/profiles/p_001"},
+      "expect_status": 200,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    },
+    {
+      "id": "get_profile_not_found_returns_nested_404",
+      "category": "error-schema",
+      "request": {"method": "GET", "path": "/profiles/p_999"},
+      "expect_status": 404,
+      "compare": ["status", "json"],
+      "ignore_paths": []
+    }
+  ]
+}

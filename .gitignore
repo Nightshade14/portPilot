@@ -150,6 +150,7 @@ activemq-data/
 # Environments
 .env
 .envrc
+!.env.example
 .venv
 env/
 venv/
@@ -216,3 +217,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- PortPilot ---
+# Generated migration targets and per-run scratch
+runs/
+# Node dependencies (templates/hono-empty installs once; targets symlink to it)
+node_modules/
+# Local agent settings
+.kiro/settings/

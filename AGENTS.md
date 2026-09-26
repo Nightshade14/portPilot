@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-PortPilot is a planned migration harness that preserves behavior while porting a Flask service to a TypeScript/Hono service. The project charter is the current source of truth: `docs/charters/PROJECT_CHARTER.md`.
+PortPilot is a planned migration harness that preserves behavior while porting a Flask service to a TypeScript/Hono service. The project charter is the current source of truth: `docs/charter/PROJECT_CHARTER.md`. The parallel build plan and frozen interfaces are in `docs/plan/PARALLEL_IMPLEMENTATION_PLAN.md`.
 
 As implementation begins, keep the controlled Flask fixture, generated Hono target, Python harness, compatibility tests, and UI clearly separated. Prefer purpose-specific top-level directories such as `src/`, `tests/`, `fixtures/`, and `docs/`. Do not commit generated targets, local databases, virtual environments, credentials, or test artifacts unless they are intentional fixtures.
 
