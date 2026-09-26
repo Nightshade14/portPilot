@@ -1,0 +1,27 @@
+[Unit]
+Description=PortPilot worker (claims runs, drives the agent, heartbeats leases)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=portpilot
+Group=portpilot
+WorkingDirectory=/opt/portpilot
+EnvironmentFile=/opt/portpilot/.env
+ExecStart=/opt/portpilot/.venv/bin/portpilot worker
+# Restart=always is what drives resume after a kill: a killed/OOM'd worker's
+# lease expires on its own, and the run is reclaimed by the worker this
+# systemd unit restarts (or, if two are briefly up, by whichever one wins the
+# claim_run race -- claim_run() is a single atomic Atlas update, so it's safe).
+Restart=always
+RestartSec=2
+TimeoutStopSec=90
+KillSignal=SIGTERM
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

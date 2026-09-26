@@ -1,0 +1,21 @@
+[Unit]
+Description=PortPilot API server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=portpilot
+Group=portpilot
+WorkingDirectory=/opt/portpilot
+EnvironmentFile=/opt/portpilot/.env
+ExecStart=/opt/portpilot/.venv/bin/portpilot api --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=2
+# No extra credentials on this host beyond what /opt/portpilot/.env provides.
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
