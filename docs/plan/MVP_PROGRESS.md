@@ -102,3 +102,5 @@ The durable state of the parent orchestrator, used to resume after context compa
 | P API + worker | adb65e6f | ../portPilot-mvp-p / mvp/p | merged (4259f98); 63 tests; real-HTTP smoke passes |
 
 After A, T, P: Lead writes agent/deps.build_deps wiring (store.v2, knowledge, sandbox, toollib, author_tool, shell_guard, render_markdown, AtlasSessionRepository, AtlasStorage), then integration slices (Sync 2-4).
+
+- 15:50 PAUSED by user. Both running lanes (A 7fcada94, T 1f7a76c3) steered to stop, commit WIP and write lane-*-status.md. Resume instructions: docs/plan/MVP_RESUME.md.
