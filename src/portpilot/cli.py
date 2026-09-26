@@ -237,5 +237,35 @@ def smoke_llm() -> None:
     typer.echo(llm_tool_call())
 
 
+# --- api / worker (Lane P) --------------------------------------------------
+
+
+@app.command()
+def api(
+    host: Annotated[str, typer.Option(help="Bind host")] = "127.0.0.1",
+    port: Annotated[int, typer.Option(help="Bind port")] = 8000,
+) -> None:
+    """Run the FastAPI server with uvicorn. Defaults to 127.0.0.1: Caddy terminates
+    TLS in front of it."""
+    import uvicorn
+
+    from portpilot.api.deps import build_api_deps
+    from portpilot.core.config import load_mvp_settings
+
+    settings = load_mvp_settings()
+    from portpilot.api.app import create_app
+
+    fastapi_app = create_app(build_api_deps(settings))
+    uvicorn.run(fastapi_app, host=host, port=port)
+
+
+@app.command()
+def worker() -> None:
+    """Run the worker loop (claims runs, drives the agent, heartbeats the lease)."""
+    from portpilot.worker.main import main as worker_main
+
+    worker_main()
+
+
 if __name__ == "__main__":
     app()

@@ -1,0 +1,23 @@
+# Caddy: automatic TLS for api.<domain>, reverse-proxied to the host-run API
+# on 127.0.0.1:8000. Caddy and the BuildKit sidecar are the only two things
+# that run in containers (compose.yml) -- the API and worker run directly on
+# the host because they drive the Docker CLI, and the Docker socket is never
+# mounted into any container.
+
+{$PORTPILOT_DOMAIN} {
+	reverse_proxy 127.0.0.1:8000
+
+	encode gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
