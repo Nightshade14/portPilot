@@ -22,6 +22,16 @@ The build was paused by the user on 2026-09-26 at 15:50 EDT. `main` was at `8ea6
 | **A** | **Agent core** (planner, selector, executor, guard, compaction, digest, reflect, loop) | **paused, not merged**. Uncommitted work was committed as "WIP Lane A: paused by user". | `../portPilot-mvp-a`, branch `mvp/a` (based on `e399d4a`, an old `main`) |
 | **T** | **Tool library**: propose, validate and promote, `SandboxScriptTool`, builtins, seeds, toolsmith | **paused, not merged**. WIP was committed as "WIP Lane T: paused by user". | `../portPilot-mvp-t`, branch `mvp/t` (based on `c3c9c96`) |
 
+**At pause (15:55):**
+- **T** committed `e9b1085` (WIP) and `f5c9c8c` (status).
+  - The library, `SandboxScriptTool`, builtins and seeds are verified offline and with Docker.
+  - The toolsmith end-to-end docker test fails, and its LLM test was never run.
+- **A** did not stop on the first steer. The lead committed its WIP as `117d8dc` plus a status doc, and `tests/agent -m "not llm"` passes 16 tests.
+
+**Lead-owned fix required before resuming:** `core/fakes.py` `LocalSandboxManager.sandbox()` passes `working_dir=` to `NotASandboxLocalEnvironment`, which doesn't accept it, so it raises `TypeError`. This blocks offline toolsmith and executor tests, and probably explains Lane A's hang. Fix it on `main` first, then `git merge main` into both lane branches.
+
+**Also:** the Strands vended `sandbox_shell` and `file_editor` treat the Docker CLI warning `Error loading config file ~/.docker/config.json: operation not permitted` as a failure in this sandboxed host. Tests pass through `DockerSandboxManager.exec`. Consider setting `DOCKER_CONFIG` to a writable directory under `runs/` for tests.
+
 Each paused lane was asked to write a status file: `docs/plan/mvp-lanes/lane-a-status.md` and `lane-t-status.md`, in their own worktrees. **Read those first.** If a file is missing, the lane stopped before writing it; check with `git -C ../portPilot-mvp-<l> log -3` and `git status`.
 
 ### Known issues at the pause
