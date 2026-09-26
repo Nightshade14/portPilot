@@ -41,11 +41,36 @@ The durable state of the parent orchestrator, used to resume after context compa
 - The user's `VOYAGE_API_KEY` is a direct Voyage AI key. It gets a 403 from `ai.mongodb.com` and works against `https://api.voyageai.com/v1/embeddings`. Verified: `voyage-4`, 1024 dims; paraphrase similarity 0.893 against 0.377 for unrelated text.
 - The `core/config.py` default is `VOYAGE_BASE_URL=https://api.voyageai.com/v1`.
 
-### Parent work done (uncommitted on `main`)
+### Parent work (committed on `main`)
 
-- `src/portpilot/core/{__init__,models,interfaces,config,fakes}.py`
-- `tests/core/test_fakes.py`
-- Full suite: 99 passed, 22 skipped. Ruff is clean.
+- `0a8c56a`: core interfaces, fakes, API contract and lane briefs.
+- Spike merges: `7a49380`, `3517762`, `4defb8a`.
+- `e399d4a`: Lane A brief.
+
+## Phase 1, Wave 1 (started 14:50 EDT; all subagents on claude-sonnet-5 at high effort)
+
+| Lane | Agent id | Worktree / branch | Status |
+|---|---|---|---|
+| M Mongo state | 75cf03ed | ../portPilot-mvp-m / mvp/m | running |
+| K Knowledge | 7ce04612 | ../portPilot-mvp-k / mvp/k | running |
+| S Sandbox | ef1f1afd | ../portPilot-mvp-s / mvp/s | running |
+| E Evals | 0fc24161 | ../portPilot-mvp-e / mvp/e | running |
+| F Frontend | b125ea09 | ../portPilot-mvp-f / mvp/f | running |
+| A Agent core | 7fcada94 | ../portPilot-mvp-a / mvp/a | running (delegated per user request) |
+
+## Next steps (parent)
+
+1. **As each lane finishes:**
+   - Run its tests in its worktree and read the diff.
+   - Merge it with `--no-ff` into `main`, in the order M → K → S → E → F → A.
+   - Run the full `pytest` and ruff after each merge.
+2. **Wave 2 briefs:**
+   - `lane-t.md`: the tool library, the toolsmith (`author_tool` for the `AgentDeps` hook), `SandboxScriptTool` using the `pp_tool_run.py` protocol from lane-s.md, and seed tools including `http_contract_diff`. It doesn't include `repo_map`, which is Lane A's survey.
+   - `lane-p.md`: FastAPI following `CONTRACT.md`, the worker (claim, heartbeat, `run_migration`), and deploy.
+3. **Start Wave 2** once M and S are merged.
+4. **Integration, owned by the Lead:**
+   - `agent/deps.build_deps(settings)` wiring the real implementations;
+   - the CLI: `portpilot worker`, `knowledge`, `runs`.
 
 ## Next steps (parent)
 
