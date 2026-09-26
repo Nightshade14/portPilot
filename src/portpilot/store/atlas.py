@@ -127,6 +127,7 @@ class AtlasStore:
     ) -> None:
         if self.runs.find_one({"run_id": run_id}, {"_id": 1}) is None:
             raise NotFound(f"run {run_id!r} not found")
+        completed_seq = self.milestones.count_documents({"run_id": run_id, "status": "completed"})
         result = self.milestones.update_one(
             {
                 "run_id": run_id,
@@ -139,6 +140,7 @@ class AtlasStore:
                     "status": "completed",
                     "completed_at": _now(),
                     "artifact_ids": list(artifact_ids),
+                    "_completed_seq": completed_seq,
                 }
             },
         )
@@ -152,12 +154,13 @@ class AtlasStore:
                     "started_at": None,
                     "completed_at": _now(),
                     "artifact_ids": list(artifact_ids),
+                    "_completed_seq": completed_seq,
                 }
             )
 
     def completed_milestones(self, run_id: str) -> list[tuple[Milestone, int]]:
         cursor = self.milestones.find({"run_id": run_id, "status": "completed"}).sort(
-            "completed_at", ASCENDING
+            [("completed_at", ASCENDING), ("_completed_seq", ASCENDING)]
         )
         return [(doc["name"], doc["attempt"]) for doc in cursor]
 

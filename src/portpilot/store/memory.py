@@ -39,6 +39,8 @@ class InMemoryStore:
         self._policies: list[Policy] = []
         self._events: list[dict[str, Any]] = []
         self._seq = 0
+        # Monotonic tick to break created_at/completed_at ties deterministically.
+        self._completion_tick = 0
 
     # --- runs -----------------------------------------------------------
     def create_run(self, source_path: str, policy_version: int) -> str:
@@ -97,8 +99,11 @@ class InMemoryStore:
                 m["status"] = "completed"
                 m["completed_at"] = _now()
                 m["artifact_ids"] = list(artifact_ids)
+                self._completion_tick += 1
+                m["_completed_seq"] = self._completion_tick
                 return
         # No matching started milestone: create a completed one directly.
+        self._completion_tick += 1
         self._milestones.append(
             {
                 "run_id": run_id,
@@ -108,6 +113,7 @@ class InMemoryStore:
                 "started_at": None,
                 "completed_at": _now(),
                 "artifact_ids": list(artifact_ids),
+                "_completed_seq": self._completion_tick,
             }
         )
 
@@ -115,7 +121,7 @@ class InMemoryStore:
         completed = [
             m for m in self._milestones if m["run_id"] == run_id and m["status"] == "completed"
         ]
-        completed.sort(key=lambda m: m["completed_at"])
+        completed.sort(key=lambda m: (m["completed_at"], m["_completed_seq"]))
         return [(m["name"], m["attempt"]) for m in completed]
 
     # --- artifacts ------------------------------------------------------
