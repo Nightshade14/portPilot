@@ -1,0 +1,331 @@
+{
+  "runs": {
+    "run_completed001": {
+      "run_id": "run_completed001",
+      "repo_url": "https://github.com/acme/flask-profile-api",
+      "goal": "Port Flask service to TypeScript/Hono",
+      "status": "completed",
+      "current_step_id": null,
+      "ltp_version": 1,
+      "lease": null,
+      "budgets": {
+        "max_steps": 40,
+        "max_tokens": 3000000,
+        "max_minutes": 240,
+        "max_tools_created": 10,
+        "max_selected_tools": 8,
+        "max_mid_step_loads": 3
+      },
+      "usage": {
+        "input_tokens": 182400,
+        "output_tokens": 41200,
+        "model_calls": 37,
+        "tool_calls": 52,
+        "compactions": 2
+      },
+      "cli_manifest": [
+        { "name": "node", "version": "26.3.1" },
+        { "name": "npm", "version": "11.16.0" }
+      ],
+      "tool_pins": { "run_hono_smoke_test": 2, "port_flask_route": 1 },
+      "control": null,
+      "error": null,
+      "workspace_branch": "portpilot/run_completed001",
+      "created_at": "2026-09-25T10:00:00+00:00",
+      "updated_at": "2026-09-25T10:41:12+00:00"
+    },
+    "run_running002": {
+      "run_id": "run_running002",
+      "repo_url": "https://github.com/acme/orders-service",
+      "goal": "Optimize the Dockerfile (size, CVEs, layers)",
+      "status": "running",
+      "current_step_id": "step_running002_03",
+      "ltp_version": 1,
+      "lease": { "owner": "worker-1", "expires_at": "2026-09-26T19:05:00+00:00" },
+      "budgets": {
+        "max_steps": 40,
+        "max_tokens": 3000000,
+        "max_minutes": 240,
+        "max_tools_created": 10,
+        "max_selected_tools": 8,
+        "max_mid_step_loads": 3
+      },
+      "usage": {
+        "input_tokens": 54210,
+        "output_tokens": 9870,
+        "model_calls": 11,
+        "tool_calls": 14,
+        "compactions": 0
+      },
+      "cli_manifest": [{ "name": "docker", "version": "27.3.1" }],
+      "tool_pins": { "analyze_dockerfile_layers": 1 },
+      "control": null,
+      "error": null,
+      "workspace_branch": "portpilot/run_running002",
+      "created_at": "2026-09-26T18:20:00+00:00",
+      "updated_at": "2026-09-26T18:38:45+00:00"
+    }
+  },
+  "plans": {
+    "run_completed001": {
+      "run_id": "run_completed001",
+      "version": 1,
+      "goal": "Port Flask service to TypeScript/Hono",
+      "phases": [
+        {
+          "id": "phase_survey",
+          "title": "Survey the Flask app",
+          "goal": "Understand routes, models and dependencies before porting.",
+          "exit_criteria": ["All Flask routes catalogued", "Data models identified"],
+          "modules": ["app.py", "models.py"]
+        },
+        {
+          "id": "phase_port",
+          "title": "Port routes to Hono",
+          "goal": "Recreate each Flask route as a Hono handler with equivalent behavior.",
+          "exit_criteria": ["Every route ported", "Response shapes match"],
+          "modules": ["src/routes"]
+        },
+        {
+          "id": "phase_verify",
+          "title": "Verify parity",
+          "goal": "Confirm the Hono service behaves like the Flask original.",
+          "exit_criteria": ["Smoke tests pass", "No regressions vs fixtures"],
+          "modules": ["tests"]
+        }
+      ],
+      "assumptions": ["SQLite dev DB is out of scope; ports the HTTP layer only."],
+      "rationale": "Route-by-route port keeps each step small and independently verifiable.",
+      "created_at": "2026-09-25T10:01:00+00:00"
+    },
+    "run_running002": {
+      "run_id": "run_running002",
+      "version": 1,
+      "goal": "Optimize the Dockerfile (size, CVEs, layers)",
+      "phases": [
+        {
+          "id": "phase_audit",
+          "title": "Audit current image",
+          "goal": "Measure baseline size, layer count and known CVEs.",
+          "exit_criteria": ["Baseline metrics recorded"],
+          "modules": ["Dockerfile"]
+        },
+        {
+          "id": "phase_optimize",
+          "title": "Apply optimizations",
+          "goal": "Multi-stage build, slim base image, dependency pruning.",
+          "exit_criteria": ["Image size reduced", "CVE count reduced"],
+          "modules": ["Dockerfile"]
+        }
+      ],
+      "assumptions": [],
+      "rationale": "Audit-then-optimize avoids premature changes without a baseline.",
+      "created_at": "2026-09-26T18:21:00+00:00"
+    }
+  },
+  "steps": {
+    "run_completed001": [
+      {
+        "step_id": "step_completed001_01",
+        "run_id": "run_completed001",
+        "seq": 1,
+        "phase_id": "phase_survey",
+        "title": "Survey routes and models",
+        "objective": "Catalogue every Flask route and dataclass model.",
+        "inputs": ["app.py", "models.py"],
+        "acceptance": [
+          { "name": "survey_artifact_exists", "command": "test -f survey.json", "expect_exit": 0, "timeout_s": 60 }
+        ],
+        "capability_hints": ["static_analysis"],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "done",
+        "selected_tools": [
+          { "name": "survey_flask_app", "version": 1, "reason": "Extracts routes and models from a Flask tree.", "used": true, "helpful": true }
+        ],
+        "missing_capabilities": [],
+        "attempts": 1,
+        "commit_sha": "a1b2c3d4e5f60718293a4b5c6d7e8f901234567",
+        "outcome": "Found 6 routes and 2 models.",
+        "usage": { "input_tokens": 21000, "output_tokens": 4200, "model_calls": 4, "tool_calls": 5, "compactions": 0 },
+        "started_at": "2026-09-25T10:01:30+00:00",
+        "ended_at": "2026-09-25T10:07:10+00:00"
+      },
+      {
+        "step_id": "step_completed001_02",
+        "run_id": "run_completed001",
+        "seq": 2,
+        "phase_id": "phase_port",
+        "title": "Port GET /profile/:id",
+        "objective": "Recreate the profile lookup route in Hono.",
+        "inputs": ["src/routes/profile.ts"],
+        "acceptance": [
+          { "name": "route_compiles", "command": "npm run build", "expect_exit": 0, "timeout_s": 300 }
+        ],
+        "capability_hints": ["typescript", "hono"],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "done",
+        "selected_tools": [
+          { "name": "port_flask_route", "version": 1, "reason": "Translates a Flask route function to a Hono handler.", "used": true, "helpful": true }
+        ],
+        "missing_capabilities": [],
+        "attempts": 1,
+        "commit_sha": "b2c3d4e5f60718293a4b5c6d7e8f901234567a1",
+        "outcome": "Route ported, response shape matches fixture.",
+        "usage": { "input_tokens": 30500, "output_tokens": 6800, "model_calls": 6, "tool_calls": 8, "compactions": 0 },
+        "started_at": "2026-09-25T10:07:15+00:00",
+        "ended_at": "2026-09-25T10:15:40+00:00"
+      },
+      {
+        "step_id": "step_completed001_03",
+        "run_id": "run_completed001",
+        "seq": 3,
+        "phase_id": "phase_port",
+        "title": "Port POST /profile",
+        "objective": "Recreate profile creation with validation parity.",
+        "inputs": ["src/routes/profile.ts"],
+        "acceptance": [
+          { "name": "route_compiles", "command": "npm run build", "expect_exit": 0, "timeout_s": 300 },
+          { "name": "unit_tests_pass", "command": "npm test -- profile.create", "expect_exit": 0, "timeout_s": 300 }
+        ],
+        "capability_hints": ["typescript", "hono", "validation"],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "done",
+        "selected_tools": [
+          { "name": "port_flask_route", "version": 1, "reason": "Reused from step 2; same translation pattern applies.", "used": true, "helpful": true }
+        ],
+        "missing_capabilities": [],
+        "attempts": 2,
+        "commit_sha": "c3d4e5f60718293a4b5c6d7e8f901234567a1b2",
+        "outcome": "Validation parity achieved after one retry (missing required-field check).",
+        "usage": { "input_tokens": 41200, "output_tokens": 9100, "model_calls": 8, "tool_calls": 11, "compactions": 1 },
+        "started_at": "2026-09-25T10:15:45+00:00",
+        "ended_at": "2026-09-25T10:29:20+00:00"
+      },
+      {
+        "step_id": "step_completed001_04",
+        "run_id": "run_completed001",
+        "seq": 4,
+        "phase_id": "phase_verify",
+        "title": "Run Hono smoke tests",
+        "objective": "Exercise every ported route end-to-end against fixtures.",
+        "inputs": ["tests/smoke.test.ts"],
+        "acceptance": [
+          { "name": "smoke_tests_pass", "command": "npm run test:smoke", "expect_exit": 0, "timeout_s": 300 }
+        ],
+        "capability_hints": ["testing"],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "done",
+        "selected_tools": [
+          { "name": "run_hono_smoke_test", "version": 2, "reason": "Runs the project's smoke suite against a local server.", "used": true, "helpful": true }
+        ],
+        "missing_capabilities": [],
+        "attempts": 1,
+        "commit_sha": "d4e5f60718293a4b5c6d7e8f901234567a1b2c3",
+        "outcome": "All 6 routes pass smoke tests.",
+        "usage": { "input_tokens": 18900, "output_tokens": 3600, "model_calls": 3, "tool_calls": 6, "compactions": 0 },
+        "started_at": "2026-09-25T10:29:25+00:00",
+        "ended_at": "2026-09-25T10:36:00+00:00"
+      },
+      {
+        "step_id": "step_completed001_05",
+        "run_id": "run_completed001",
+        "seq": 5,
+        "phase_id": "phase_verify",
+        "title": "Record lessons and finalize",
+        "objective": "Capture reusable lessons and finalize the workspace branch.",
+        "inputs": [],
+        "acceptance": [
+          { "name": "branch_clean", "command": "git status --porcelain", "expect_exit": 0, "timeout_s": 30 }
+        ],
+        "capability_hints": [],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "done",
+        "selected_tools": [],
+        "missing_capabilities": [],
+        "attempts": 1,
+        "commit_sha": "e5f60718293a4b5c6d7e8f901234567a1b2c3d4",
+        "outcome": "Lessons recorded; branch finalized.",
+        "usage": { "input_tokens": 8100, "output_tokens": 1500, "model_calls": 2, "tool_calls": 1, "compactions": 0 },
+        "started_at": "2026-09-25T10:36:05+00:00",
+        "ended_at": "2026-09-25T10:41:12+00:00"
+      }
+    ],
+    "run_running002": [
+      {
+        "step_id": "step_running002_01",
+        "run_id": "run_running002",
+        "seq": 1,
+        "phase_id": "phase_audit",
+        "title": "Measure baseline image",
+        "objective": "Build the current Dockerfile and record size, layers and CVEs.",
+        "inputs": ["Dockerfile"],
+        "acceptance": [
+          { "name": "baseline_recorded", "command": "test -f baseline.json", "expect_exit": 0, "timeout_s": 120 }
+        ],
+        "capability_hints": ["docker"],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "done",
+        "selected_tools": [
+          { "name": "analyze_dockerfile_layers", "version": 1, "reason": "Reports per-layer size and a CVE scan summary.", "used": true, "helpful": true }
+        ],
+        "missing_capabilities": [],
+        "attempts": 1,
+        "commit_sha": "f60718293a4b5c6d7e8f901234567a1b2c3d4e5",
+        "outcome": "Baseline: 812MB, 14 layers, 23 CVEs (4 high).",
+        "usage": { "input_tokens": 15200, "output_tokens": 2800, "model_calls": 3, "tool_calls": 3, "compactions": 0 },
+        "started_at": "2026-09-26T18:21:30+00:00",
+        "ended_at": "2026-09-26T18:26:00+00:00"
+      },
+      {
+        "step_id": "step_running002_02",
+        "run_id": "run_running002",
+        "seq": 2,
+        "phase_id": "phase_optimize",
+        "title": "Switch to multi-stage build",
+        "objective": "Split build and runtime stages to drop build-only dependencies.",
+        "inputs": ["Dockerfile"],
+        "acceptance": [
+          { "name": "image_builds", "command": "docker build -t pp-optimize .", "expect_exit": 0, "timeout_s": 600 }
+        ],
+        "capability_hints": ["docker"],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "done",
+        "selected_tools": [
+          { "name": "rewrite_dockerfile_multistage", "version": 1, "reason": "Generates a multi-stage variant from a single-stage Dockerfile.", "used": true, "helpful": true }
+        ],
+        "missing_capabilities": [],
+        "attempts": 1,
+        "commit_sha": "0718293a4b5c6d7e8f901234567a1b2c3d4e5f6",
+        "outcome": "Multi-stage build applied; image now 340MB.",
+        "usage": { "input_tokens": 19800, "output_tokens": 3900, "model_calls": 4, "tool_calls": 5, "compactions": 0 },
+        "started_at": "2026-09-26T18:26:05+00:00",
+        "ended_at": "2026-09-26T18:33:40+00:00"
+      },
+      {
+        "step_id": "step_running002_03",
+        "run_id": "run_running002",
+        "seq": 3,
+        "phase_id": "phase_optimize",
+        "title": "Re-scan for CVEs",
+        "objective": "Confirm the slimmer image reduces the CVE count.",
+        "inputs": [],
+        "acceptance": [
+          { "name": "cve_scan_improved", "command": "trivy image pp-optimize", "expect_exit": 0, "timeout_s": 300 }
+        ],
+        "capability_hints": ["security"],
+        "budget": { "max_turns": 40, "max_tokens": 400000, "max_minutes": 45 },
+        "status": "running",
+        "selected_tools": [
+          { "name": "analyze_dockerfile_layers", "version": 1, "reason": "Re-run to compare against the recorded baseline.", "used": false, "helpful": null }
+        ],
+        "missing_capabilities": [],
+        "attempts": 1,
+        "commit_sha": null,
+        "outcome": null,
+        "usage": { "input_tokens": 19210, "output_tokens": 3170, "model_calls": 4, "tool_calls": 6, "compactions": 0 },
+        "started_at": "2026-09-26T18:33:45+00:00",
+        "ended_at": null
+      }
+    ]
+  }
+}

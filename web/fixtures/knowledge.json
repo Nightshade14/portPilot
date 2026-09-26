@@ -1,0 +1,58 @@
+[
+  {
+    "id": "know_lesson001",
+    "kind": "lesson",
+    "title": "Flask's implicit int converter needs an explicit Zod schema in Hono.",
+    "body": "Flask's `<int:id>` route converter 404s on non-numeric input automatically. Hono has no equivalent, so every ported route needs an explicit `z.coerce.number().int()` validator or the 404 behavior silently changes to a 500.",
+    "tags": ["flask", "hono", "validation"],
+    "facets": { "language": "python", "framework": "flask", "ecosystem": "node" },
+    "sources": [{ "run_id": "run_completed001", "step_id": "step_completed001_05", "repo_url": "https://github.com/acme/flask-profile-api" }],
+    "seen_count": 1,
+    "status": "active",
+    "ref": null,
+    "created_at": "2026-09-25T10:38:00+00:00",
+    "updated_at": "2026-09-25T10:38:00+00:00"
+  },
+  {
+    "id": "know_gotcha001",
+    "kind": "gotcha",
+    "title": "Hono's json() helper does not set charset=utf-8 by default.",
+    "body": "`c.json(body)` in Hono sets `Content-Type: application/json` without a charset. Flask's `jsonify` sets `application/json` too, so this is actually parity -- but clients that inferred UTF-8 from Flask's `mimetype` should not assume it here either.",
+    "tags": ["hono", "http"],
+    "facets": { "language": "typescript", "framework": "hono" },
+    "sources": [{ "run_id": "run_completed001", "step_id": "step_completed001_05", "repo_url": "https://github.com/acme/flask-profile-api" }],
+    "seen_count": 3,
+    "status": "active",
+    "ref": null,
+    "created_at": "2026-09-25T10:39:00+00:00",
+    "updated_at": "2026-09-25T10:39:00+00:00"
+  },
+  {
+    "id": "know_toolcard001",
+    "kind": "tool_card",
+    "title": "run_hono_smoke_test",
+    "body": "Starts a local Hono server and exercises each route once, with response-shape assertions.",
+    "tags": ["hono", "testing"],
+    "facets": { "ecosystem": "node" },
+    "sources": [{ "run_id": "run_completed001", "step_id": "step_completed001_04", "repo_url": null }],
+    "seen_count": 4,
+    "status": "active",
+    "ref": "tool:run_hono_smoke_test@2",
+    "created_at": "2026-09-25T10:29:35+00:00",
+    "updated_at": "2026-09-25T10:29:35+00:00"
+  },
+  {
+    "id": "know_digest001",
+    "kind": "run_digest",
+    "title": "Port Flask service to TypeScript/Hono -- completed",
+    "body": "Ported 6 routes across 5 steps; 1 retry on POST /profile for validation parity. Smoke suite green. Recorded 1 lesson and 1 gotcha.",
+    "tags": ["flask", "hono"],
+    "facets": { "language": "python" },
+    "sources": [{ "run_id": "run_completed001", "step_id": null, "repo_url": "https://github.com/acme/flask-profile-api" }],
+    "seen_count": 1,
+    "status": "active",
+    "ref": "run:run_completed001",
+    "created_at": "2026-09-25T10:41:12+00:00",
+    "updated_at": "2026-09-25T10:41:12+00:00"
+  }
+]
