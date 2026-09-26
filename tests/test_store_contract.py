@@ -2,7 +2,7 @@
 
 One suite, parametrized over a `store` fixture:
 - `memory` always runs.
-- `atlas` runs only when MONGODB_URI is set; otherwise it is skipped
+- `atlas` runs only when PORTPILOT_TEST_MONGODB_URI is set; otherwise it is skipped
   (marked `atlas`). It uses a unique throwaway db per session, dropped at
   teardown.
 
@@ -42,28 +42,27 @@ def store_bundle(request: pytest.FixtureRequest):
 
     # atlas
     request.applymarker(pytest.mark.atlas)
-    uri = os.getenv("MONGODB_URI")
+    uri = os.getenv("PORTPILOT_TEST_MONGODB_URI")
     if not uri:
-        pytest.skip("MONGODB_URI not set; skipping live Atlas store tests")
-
-    from pymongo import MongoClient
+        pytest.skip("PORTPILOT_TEST_MONGODB_URI not set; skipping live Atlas store tests")
 
     from portpilot.store.atlas import AtlasStore
 
     db_name = f"portpilot_test_{uuid.uuid4().hex[:12]}"
     store = AtlasStore(uri, db_name)
+    reopened: list[AtlasStore] = []
 
     def _reopen() -> AtlasStore:
-        return AtlasStore(uri, db_name)
+        fresh = AtlasStore(uri, db_name)
+        reopened.append(fresh)
+        return fresh
 
     try:
         yield store, _reopen
     finally:
-        client: MongoClient = MongoClient(uri, serverSelectionTimeoutMS=8000)
-        try:
-            client.drop_database(db_name)
-        finally:
-            client.close()
+        store.drop()
+        for s in [store, *reopened]:
+            s.close()
 
 
 @pytest.fixture

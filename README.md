@@ -16,6 +16,7 @@ cp .env.example .env         # fill in MONGODB_URI, OPENROUTER_API_KEY, MODEL_ID
 | Command | Purpose |
 |---|---|
 | `uv run pytest` | Unit and interface tests (no network) |
+| `PORTPILOT_TEST_MONGODB_URI=mongodb://127.0.0.1:27018/ uv run pytest` | Also run the Mongo-backed store and resume tests against a disposable local MongoDB (`docker run -d --name portpilot-mongo -p 127.0.0.1:27018:27017 mongo:8.2`). Each test uses and drops its own `portpilot_test_*` database. Kept separate from `MONGODB_URI` so tests never touch the Atlas cluster in `.env`. |
 | `uv run ruff check src tests && uv run ruff format --check src tests` | Lint and format check |
 | `uv run portpilot smoke atlas` | Write/read/delete one document in Atlas |
 | `uv run portpilot smoke llm` | One Strands tool call through OpenRouter with `MODEL_ID` |

@@ -194,3 +194,41 @@ def test_compile_error_gets_one_repair_round():
     first = store.artifacts(run_id, "target_version")[0]["content"]
     assert first["typecheck"] == {"ok": True, "output": first["typecheck"]["output"], "repairs": 1}
     assert "TS" in gen.requests[1].compiler_errors
+
+
+@needs_node
+@pytest.mark.atlas
+def test_atlas_run_resumes_from_a_fresh_store_instance():
+    """Pause on AtlasStore, drop the store, resume from a brand-new AtlasStore
+    on the same database -- what `portpilot resume` does after a restart."""
+    import os
+    import uuid
+
+    uri = os.getenv("PORTPILOT_TEST_MONGODB_URI")
+    if not uri:
+        pytest.skip("PORTPILOT_TEST_MONGODB_URI not set")
+    from portpilot.store.atlas import AtlasStore
+
+    db = f"portpilot_test_{uuid.uuid4().hex[:12]}"
+    first = AtlasStore(uri, db)
+    try:
+        run_id = orchestrator.start_run(
+            first, generator=ReferenceGenerator(), pause_after="diagnosis"
+        )
+        assert first.get_run(run_id)["status"] == "paused"
+        first.close()
+
+        second = AtlasStore(uri, db)
+        orchestrator.resume(second, run_id, generator=ReferenceGenerator())
+        run = second.get_run(run_id)
+        assert run["status"] == "completed"
+        assert [m for m, _ in second.completed_milestones(run_id)].count("source_analysis") == 1
+        assert {p.version: p.status for p in second.list_policies(POLICY_NAME)} == {
+            1: "retired",
+            2: "active",
+        }
+        second.close()
+    finally:
+        cleanup = AtlasStore(uri, db)
+        cleanup.drop()
+        cleanup.close()

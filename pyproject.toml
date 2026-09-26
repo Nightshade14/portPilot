@@ -34,7 +34,7 @@ packages = ["src/portpilot"]
 testpaths = ["tests"]
 addopts = "-q"
 markers = [
-    "atlas: needs MONGODB_URI (live Atlas)",
+    "atlas: needs PORTPILOT_TEST_MONGODB_URI (a disposable MongoDB; never production)",
     "llm: needs OPENROUTER_API_KEY (live model calls)",
 ]
 

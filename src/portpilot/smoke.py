@@ -13,23 +13,29 @@ from portpilot.config import load_settings
 
 
 def atlas_roundtrip() -> str:
-    from pymongo import MongoClient
+    import asyncio
+
+    from pymongo import AsyncMongoClient
 
     s = load_settings()
     if not s.mongodb_uri:
         raise SystemExit("MONGODB_URI is not set (see .env.example)")
-    client: MongoClient = MongoClient(s.mongodb_uri, serverSelectionTimeoutMS=8000)
-    try:
-        coll = client[s.mongodb_db]["smoke"]
-        token = uuid.uuid4().hex
-        coll.insert_one({"_id": token, "ts": datetime.now(UTC)})
-        found = coll.find_one({"_id": token})
-        coll.delete_one({"_id": token})
-        if not found:
-            raise SystemExit("Atlas: wrote a document but could not read it back")
-        return f"Atlas OK: round-tripped one document in {s.mongodb_db}.smoke"
-    finally:
-        client.close()
+
+    async def _roundtrip() -> bool:
+        client: AsyncMongoClient = AsyncMongoClient(s.mongodb_uri, serverSelectionTimeoutMS=8000)
+        try:
+            coll = client[s.mongodb_db]["smoke"]
+            token = uuid.uuid4().hex
+            await coll.insert_one({"_id": token, "ts": datetime.now(UTC)})
+            found = await coll.find_one({"_id": token})
+            await coll.delete_one({"_id": token})
+            return found is not None
+        finally:
+            await client.close()
+
+    if not asyncio.run(_roundtrip()):
+        raise SystemExit("Atlas: wrote a document but could not read it back")
+    return f"Atlas OK (async pymongo): round-tripped one document in {s.mongodb_db}.smoke"
 
 
 def llm_tool_call() -> str:
