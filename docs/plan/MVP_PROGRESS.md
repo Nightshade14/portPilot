@@ -52,9 +52,9 @@ The durable state of the parent orchestrator, used to resume after context compa
 | Lane | Agent id | Worktree / branch | Status |
 |---|---|---|---|
 | M Mongo state | 75cf03ed | ../portPilot-mvp-m / mvp/m | running |
-| K Knowledge | 7ce04612 | ../portPilot-mvp-k / mvp/k | running |
+| K Knowledge | 7ce04612 | ../portPilot-mvp-k / mvp/k | merged (3be9c91); live Atlas+Voyage test passed; 2 prod indexes exist on portpilot_mvp.knowledge |
 | S Sandbox | ef1f1afd | ../portPilot-mvp-s / mvp/s | running |
-| E Evals | 0fc24161 | ../portPilot-mvp-e / mvp/e | running |
+| E Evals | 0fc24161 | ../portPilot-mvp-e / mvp/e | merged (a3daada); baselines E2 424MB 228 CRIT, E3 441MB 227 CRIT |
 | F Frontend | b125ea09 | ../portPilot-mvp-f / mvp/f | running |
 | A Agent core | 7fcada94 | ../portPilot-mvp-a / mvp/a | running (delegated per user request) |
 
@@ -89,3 +89,7 @@ The durable state of the parent orchestrator, used to resume after context compa
 
 - `VOYAGE_API_KEY` is missing from `.env`. The user needs to create a Model API key in the Atlas UI.
 - The session ledger is unavailable because the crew log is disabled, so this file replaces it.
+
+- 15:05 Lane A steered: author_tool(run_id, step_id, name, purpose, requirements) -> {ok,name,version,reason}; library emits tool_* events; new tool registered in same step.
+- Wave 2 briefs written: lane-t.md, lane-p.md (spawn after M and S merge).
+- Gotchas from K: $search filter on token field needs `equals`; mongot ~1s indexing lag after insert.
