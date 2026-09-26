@@ -12,6 +12,10 @@ dependencies = [
     "typer==0.27.2",
     "rich==15.0.0",
     "python-dotenv==1.2.3",
+    "fastapi==0.136.1",
+    "uvicorn==0.54.0",
+    "pyyaml==6.0.3",
+    "jsonschema==4.26.0",
 ]
 
 [project.scripts]
@@ -36,6 +40,13 @@ addopts = "-q"
 markers = [
     "atlas: needs PORTPILOT_TEST_MONGODB_URI (a disposable MongoDB; never production)",
     "llm: needs OPENROUTER_API_KEY (live model calls)",
+    "mongo: needs PORTPILOT_TEST_MONGODB_URI (local mongo:8.2 on 127.0.0.1:27018)",
+    "atlas_local: needs PORTPILOT_TEST_ATLAS_LOCAL_URI (mongodb-atlas-local on 127.0.0.1:27019)",
+    "docker: needs a Docker daemon (sandbox containers)",
+    "network: needs outbound internet (git clone, CLI downloads)",
+    "live_atlas: touches the real Atlas cluster (manual only)",
+    "live_voyage: calls the Voyage embeddings API (manual only)",
+    "chaos: kill-and-resume tests",
 ]
 
 [tool.ruff]

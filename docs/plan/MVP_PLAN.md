@@ -750,7 +750,35 @@ The fixed-milestone `harness/` is retired after Sync 2, and `policies/` is repla
 6. **Repo limits:** public GitHub repos up to 200 MB.
 7. **Cheap model:** chosen in S2.
 
-Spike decisions (filled in during Phase 0b):
-- S1: _pending_
-- S2: _pending_
-- S3: _pending_
+Spike decisions (recorded 2026-09-26 in Phase 0b; full detail in `docs/spikes/S*.md`):
+
+**S1: Atlas**
+- **Hybrid search:** use native `$rankFusion`. It accepts `$vectorSearch` and `$search` on 8.0.32. The manual reciprocal-rank-fusion fallback is kept.
+- **Embeddings:** `voyage-4` at 1024 dimensions.
+  - The user's key is a direct Voyage AI key. It is rejected by `ai.mongodb.com` (403) and accepted by `https://api.voyageai.com/v1/embeddings` (verified live).
+  - Embeddings are computed on our side. `autoEmbed` builds on M0, but it isn't used.
+- **Local testing:** `mongodb/mongodb-atlas-local:latest` (8.3.11) starts on this host. Use port 27019 with `directConnection=true`.
+
+**S2: Strands**
+- **Loading tools while the agent runs:** `agent.tool_registry.register_dynamic_tool(tool)`.
+- **Guardrails:** attach them with `Agent(interventions=[...])`.
+- **Compaction:** `context_window_limit` is a top-level `OpenAIModel` config setting.
+  - Set it for every model; proactive compression depends on it.
+  - The pinned first message survived every compaction.
+- **Token cost:** the 11 core tool definitions cost 1,282 input tokens.
+- **Offloading large outputs:** `ContextOffloader` from `strands.vended_plugins.context_offloader`, with a `Storage` that has 5 methods.
+- **Resume after `kill -9`:** Strands repairs a tool call that was cut off, the next time the agent runs. No manual repair is needed.
+- **Cheaper model for side tasks:** `google/gemini-2.5-flash-lite`.
+
+**S3: Sandbox**
+- **Hardened container:** `debian:bookworm-slim` pinned by digest; read-only root filesystem, all capabilities dropped, no-new-privileges, CPU/memory/process limits, and no Docker socket.
+- **Tool names:** the sandbox tools are `sandbox_shell` and `sandbox_file_editor`.
+- **Image builds:** rootless BuildKit `v0.33.0` needs `--privileged` on Docker Desktop.
+  - It runs as a sidecar, isolated from the sandbox, which reaches it over TCP.
+  - This is acceptable only on the disposable VM.
+- **Archive format:** trivy and dive need docker-archive output.
+- **Sample image, before and after optimization:**
+  - size: 368.7 MB → 48.0 MB;
+  - CRITICAL CVEs: 228 → 9;
+  - HIGH CVEs: 2391 → 111.
+- **Not yet verified:** git checkpoint and restore inside the container. Lane S verifies it.
