@@ -1,0 +1,185 @@
+# config/cli_allowlist.yaml -- draft allow-list for spikes/s3/install.py.
+#
+# Schema:
+#   tools:
+#     <name>:                       # key = the only string install_cli_tool()/install.py accepts
+#       version: "<upstream tag, no leading v>"
+#       verify_command: "<cmd>"     # run after install; stdout+stderr must contain `version`
+#       architectures:
+#         amd64:
+#           url: "<direct download URL for this arch>"
+#           sha256: "<lowercase hex, copied verbatim from the project's own published
+#                     checksums file -- never computed by the installer or by us>"
+#           install_method: "binary" | "tarball:<path-to-binary-inside-the-archive>"
+#         arm64:
+#           ...same shape...
+#
+# "required" tools (trivy, hadolint, dive) had their arm64 sha256 independently
+# re-verified by downloading the artifact and hashing it locally (see
+# docs/spikes/S3_SANDBOX.md, goal 3) -- not just copied from the checksums file.
+# "best effort" tools (syft, grype, dockle, crane, jq, yq, ripgrep) have sha256
+# copied verbatim from the project's own checksums file/sidecar, not independently
+# re-verified in this spike.
+# shellcheck and buildkit publish NO sha256 checksums file for this release at all
+# (buildkit ships only cosign/SLSA attestations) -- they are listed with
+# sha256: null and are refused by install.py until a hash exists to pin against.
+
+tools:
+  trivy:
+    version: "0.74.0"
+    verify_command: "trivy --version"
+    architectures:
+      amd64:
+        url: "https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz"
+        sha256: "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
+        install_method: "tarball:trivy"
+      arm64:
+        url: "https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-ARM64.tar.gz"
+        sha256: "b94ce1976bbf3c15b514b605ee88be7c6d94a29be2302847ff01cb794d47aad5"
+        install_method: "tarball:trivy"
+
+  hadolint:
+    version: "2.15.1"
+    verify_command: "hadolint --version"
+    architectures:
+      amd64:
+        url: "https://github.com/hadolint/hadolint/releases/download/v2.15.1/hadolint-linux-x86_64"
+        sha256: "c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507"
+        install_method: "binary"
+      arm64:
+        url: "https://github.com/hadolint/hadolint/releases/download/v2.15.1/hadolint-linux-arm64"
+        sha256: "f6198ef8090f404dbb771abfee086eb8c48ac177f30da7fd3510aca35b344b5d"
+        install_method: "binary"
+
+  dive:
+    version: "0.13.1"
+    verify_command: "dive --version"
+    architectures:
+      amd64:
+        url: "https://github.com/wagoodman/dive/releases/download/v0.13.1/dive_0.13.1_linux_amd64.tar.gz"
+        sha256: "0970549eb4a306f8825a84145a2534153badb4d7dcf3febd1967c706367c3d0e"
+        install_method: "tarball:dive"
+      arm64:
+        url: "https://github.com/wagoodman/dive/releases/download/v0.13.1/dive_0.13.1_linux_arm64.tar.gz"
+        sha256: "2fcd2cf20f634ccdb41efac44048b204bfc867c115641f37a7420693ed480a18"
+        install_method: "tarball:dive"
+
+  syft:
+    version: "1.52.0"
+    verify_command: "syft version"
+    architectures:
+      amd64:
+        url: "https://github.com/anchore/syft/releases/download/v1.52.0/syft_1.52.0_linux_amd64.tar.gz"
+        sha256: "caeedb81fb0491615f1ebd1761e4145d41ee86dd2cc7bf80669f9f5ad9d6133d"
+        install_method: "tarball:syft"
+      arm64:
+        url: "https://github.com/anchore/syft/releases/download/v1.52.0/syft_1.52.0_linux_arm64.tar.gz"
+        sha256: "c46d5e4c28e12aa4c5becfaa343ef1c7f89045b6b895f2c21d471c62db09c706"
+        install_method: "tarball:syft"
+
+  grype:
+    version: "0.119.0"
+    verify_command: "grype version"
+    architectures:
+      amd64:
+        url: "https://github.com/anchore/grype/releases/download/v0.119.0/grype_0.119.0_linux_amd64.tar.gz"
+        sha256: "3fa2dc4b924621ab65404cf08d0b8438d896d80ab949c9d5a4ca283c36004c9b"
+        install_method: "tarball:grype"
+      arm64:
+        url: "https://github.com/anchore/grype/releases/download/v0.119.0/grype_0.119.0_linux_arm64.tar.gz"
+        sha256: "29f0ec7c549ddb0e2b6a0ca714851f7399438afc399b80c12808e065edc9a8f8"
+        install_method: "tarball:grype"
+
+  dockle:
+    version: "0.4.15"
+    verify_command: "dockle --version"
+    architectures:
+      amd64:
+        url: "https://github.com/goodwithtech/dockle/releases/download/v0.4.15/dockle_0.4.15_Linux-64bit.tar.gz"
+        sha256: "8bfc9183d1d3d67800edb45bea4bb63ddf1d28bec5f89944075a07007d79caad"
+        install_method: "tarball:dockle"
+      arm64:
+        url: "https://github.com/goodwithtech/dockle/releases/download/v0.4.15/dockle_0.4.15_Linux-ARM64.tar.gz"
+        sha256: "14c2fbcd675afaa0f1717e97ab71eee178dabdef676066189f49bad0f53b8762"
+        install_method: "tarball:dockle"
+
+  crane:
+    version: "0.22.1"
+    verify_command: "crane version"
+    architectures:
+      amd64:
+        url: "https://github.com/google/go-containerregistry/releases/download/v0.22.1/go-containerregistry_Linux_x86_64.tar.gz"
+        sha256: "0ab7a1d6932a213aed964ce97666c3077fe691c8606413674a8b3e0b9ec4cda0"
+        install_method: "tarball:crane"
+      arm64:
+        url: "https://github.com/google/go-containerregistry/releases/download/v0.22.1/go-containerregistry_Linux_arm64.tar.gz"
+        sha256: "898c0cff975f898a33e8c4580bdafb0e7c02c7faa33374e946762f97c4ab7110"
+        install_method: "tarball:crane"
+
+  jq:
+    version: "1.8.2"
+    verify_command: "jq --version"
+    architectures:
+      amd64:
+        url: "https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-amd64"
+        sha256: "b1c22172dd303f3be49e935aa56aa48a8b7a46e0bc838b4997d3bb451495870f"
+        install_method: "binary"
+      arm64:
+        url: "https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-arm64"
+        sha256: "8b85c817833814ddca00a144c33705546355afccf0cf39b188f3cdb48b852309"
+        install_method: "binary"
+
+  yq:
+    version: "4.53.6"
+    verify_command: "yq --version"
+    architectures:
+      amd64:
+        url: "https://github.com/mikefarah/yq/releases/download/v4.53.6/yq_linux_amd64"
+        sha256: "c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385"
+        install_method: "binary"
+      arm64:
+        url: "https://github.com/mikefarah/yq/releases/download/v4.53.6/yq_linux_arm64"
+        sha256: "88a1016bc1d657375a35864e4f44b6f333df8ff97b559f51bba0adcb2169df09"
+        install_method: "binary"
+
+  ripgrep:
+    version: "15.2.0"
+    verify_command: "rg --version"
+    architectures:
+      amd64:
+        url: "https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-x86_64-unknown-linux-musl.tar.gz"
+        sha256: "33e15bcf1624b25cdd2a55813a47a2f95dbe126268203e76aa6a585d1e7b149c"
+        install_method: "tarball:ripgrep-15.2.0-x86_64-unknown-linux-musl/rg"
+      arm64:
+        url: "https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15.2.0-aarch64-unknown-linux-gnu.tar.gz"
+        sha256: "a740b91c82eaf9914cfedd353572f2791cbe0162c84101ee0951058f4dcbc90d"
+        install_method: "tarball:ripgrep-15.2.0-aarch64-unknown-linux-gnu/rg"
+
+  # NOT installable by install.py yet: no published sha256 to pin against for this
+  # release. Listed for visibility; sha256: null causes a KeyError/refusal by design
+  # until a human adds a verified hash (e.g. by hashing a cosign-attested artifact).
+  shellcheck:
+    version: "0.11.0"
+    verify_command: "shellcheck --version"
+    architectures:
+      amd64:
+        url: "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz"
+        sha256: null  # no checksums file published for this release
+        install_method: "tarball:shellcheck-v0.11.0/shellcheck"
+      arm64:
+        url: "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.aarch64.tar.xz"
+        sha256: null
+        install_method: "tarball:shellcheck-v0.11.0/shellcheck"
+
+  buildctl:
+    version: "0.33.0"
+    verify_command: "buildctl --version"
+    architectures:
+      amd64:
+        url: "https://github.com/moby/buildkit/releases/download/v0.33.0/buildkit-v0.33.0.linux-amd64.tar.gz"
+        sha256: null  # only cosign/SLSA attestations published, no sha256 file
+        install_method: "tarball:bin/buildctl"
+      arm64:
+        url: "https://github.com/moby/buildkit/releases/download/v0.33.0/buildkit-v0.33.0.linux-arm64.tar.gz"
+        sha256: null
+        install_method: "tarball:bin/buildctl"
