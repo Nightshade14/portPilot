@@ -7,6 +7,7 @@ Purpose: port the Flask Profile Normalization API to an idiomatic, modern Hono (
 - Expose `GET /health` returning `{"ok": true}`.
 - Expose `POST /profiles/normalize`, `POST /profiles/validate`, and `GET /profiles/:id`.
 - Validate request bodies with zod through `@hono/zod-validator`, and rely on the framework's default validation error responses; return idiomatic JSON errors.
+- Error handling follows the target platform's conventions, not the legacy service's: let `zValidator` return its default validation failure response (do not pass a custom hook), and for an unknown id throw Hono's `HTTPException` with status 404 and a short message, or return `c.json({ error: "Not found" }, 404)`. Do not port Flask-specific error formatting or status-code choices; the platform's standard error shape replaces them.
 - The normalized profile always has all six keys: `name`, `email`, `age`, `country`, `newsletter`, `tags`.
 - `name`: required string; trim it; a value that is empty after trimming counts as missing.
 - `email`: required string; trim it and lowercase it; it must contain `@`.

@@ -47,6 +47,10 @@ _RULE_BULLETS: dict[str, str] = {
 def _error_status_and_schema_block() -> str:
     return (
         "## Rule block: error_status_and_schema\n"
+        "- This rule block SUPERSEDES every earlier rule about error handling, "
+        "validation failure responses and status codes (including any instruction to "
+        "use framework defaults or not to port legacy error formatting). Legacy "
+        "clients depend on the exact legacy error behavior below.\n"
         "- Return HTTP 422 for every validation failure and 404 for an unknown "
         "profile id. Never return 400.\n"
         "- Every error response uses this nested body verbatim, with the exact "
