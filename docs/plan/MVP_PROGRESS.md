@@ -55,7 +55,7 @@ The durable state of the parent orchestrator, used to resume after context compa
 | K Knowledge | 7ce04612 | ../portPilot-mvp-k / mvp/k | merged (3be9c91); live Atlas+Voyage test passed; 2 prod indexes exist on portpilot_mvp.knowledge |
 | S Sandbox | ef1f1afd | ../portPilot-mvp-s / mvp/s | merged (41ae075); Lead verified trivy/hadolint/dive installs + nmap refused; pp-buildkitd + pp-net left running |
 | E Evals | 0fc24161 | ../portPilot-mvp-e / mvp/e | merged (a3daada); baselines E2 424MB 228 CRIT, E3 441MB 227 CRIT |
-| F Frontend | b125ea09 | ../portPilot-mvp-f / mvp/f | running |
+| F Frontend | b125ea09 | ../portPilot-mvp-f / mvp/f | merged (c3c9c96); Next 16, 28 vitest, fixtures mode |
 | A Agent core | 7fcada94 | ../portPilot-mvp-a / mvp/a | running (delegated per user request) |
 
 ## Next steps (parent)
@@ -93,3 +93,12 @@ The durable state of the parent orchestrator, used to resume after context compa
 - 15:05 Lane A steered: author_tool(run_id, step_id, name, purpose, requirements) -> {ok,name,version,reason}; library emits tool_* events; new tool registered in same step.
 - Wave 2 briefs written: lane-t.md, lane-p.md (spawn after M and S merge).
 - Gotchas from K: $search filter on token field needs `equals`; mongot ~1s indexing lag after insert.
+
+## Wave 2 (started 15:18 EDT)
+
+| Lane | Agent id | Worktree / branch | Status |
+|---|---|---|---|
+| T Tool library | 1f7a76c3 | ../portPilot-mvp-t / mvp/t | running |
+| P API + worker | adb65e6f | ../portPilot-mvp-p / mvp/p | running |
+
+After A, T, P: Lead writes agent/deps.build_deps wiring (store.v2, knowledge, sandbox, toollib, author_tool, shell_guard, render_markdown, AtlasSessionRepository, AtlasStorage), then integration slices (Sync 2-4).
