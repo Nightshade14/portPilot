@@ -1,0 +1,173 @@
+{
+  "run": {
+    "run_id": "run_9f8e7d6c5b4a",
+    "source_path": "fixtures/flask-profile-api",
+    "policy_version": 1,
+    "status": "paused",
+    "current_milestone": "candidate_policy",
+    "attempt": 1,
+    "created_at": "2026-09-26T12:20:00+00:00",
+    "updated_at": "2026-09-26T12:23:30+00:00",
+    "last_checkpoint": {"milestone": "candidate_policy", "note": "paused after candidate_policy", "ts": "2026-09-26T12:23:30+00:00"}
+  },
+  "milestones": [
+    ["source_analysis", 1],
+    ["generation", 1],
+    ["test", 1],
+    ["diagnosis", 1],
+    ["candidate_policy", 1]
+  ],
+  "policies": [
+    {
+      "name": "flask-to-hono",
+      "version": 1,
+      "status": "active",
+      "body": "# flask-to-hono policy v1\n\nTranslate the Flask business logic faithfully into idiomatic Hono + zod.\n\n## Rules\n- Use @hono/zod-validator defaults for request validation.\n- Keep handlers small and idiomatic.",
+      "rules": [
+        "Use @hono/zod-validator defaults for request validation.",
+        "Keep handlers small and idiomatic."
+      ],
+      "parent_version": null,
+      "rationale": "Idiomatic Hono/zod baseline; says nothing about legacy status codes or nested error schema.",
+      "decision": null
+    },
+    {
+      "name": "flask-to-hono",
+      "version": 2,
+      "status": "candidate",
+      "body": "# flask-to-hono policy v2\n\nAll of v1, plus legacy error-compatibility rules.\n\n## Rules\n- Return HTTP 422 (not 400) for every validation failure.\n- Emit the nested error body exactly as SPEC.md defines.\n- Unknown profile ids return the nested 404 body.",
+      "rules": [
+        "Return HTTP 422 (not 400) for every validation failure.",
+        "Emit the nested error body exactly as SPEC.md defines.",
+        "Unknown profile ids return the nested 404 body."
+      ],
+      "parent_version": 1,
+      "rationale": "error_status_and_schema across cases 5,7,8,10; not yet evaluated.",
+      "decision": null
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_id": "art_src000000009",
+      "run_id": "run_9f8e7d6c5b4a",
+      "kind": "source_analysis",
+      "attempt": 1,
+      "created_at": "2026-09-26T12:20:30+00:00",
+      "content": {
+        "routes": ["POST /profiles/normalize", "POST /profiles/validate", "GET /profiles/<id>"],
+        "coercions": {"age": "string/float truncated toward zero, range 0..150"},
+        "defaults": {"country": "US", "newsletter": false, "tags": []},
+        "errors": {"validation": "422 nested", "not_found": "404 nested"}
+      }
+    },
+    {
+      "artifact_id": "art_test0000009",
+      "run_id": "run_9f8e7d6c5b4a",
+      "kind": "test_output",
+      "attempt": 1,
+      "created_at": "2026-09-26T12:22:00+00:00",
+      "content": {
+        "run_id": "run_9f8e7d6c5b4a",
+        "attempt": 1,
+        "policy_version": 1,
+        "passed": 6,
+        "total": 10,
+        "cases": [
+          {"case_id": "normalize_happy_path", "category": "success", "passed": true,
+           "source": {"status": 200, "json": {"name": "Ada Lovelace", "email": "ada@example.com", "age": 36, "country": "GB", "newsletter": true, "tags": ["math"]}},
+           "target": {"status": 200, "json": {"name": "Ada Lovelace", "email": "ada@example.com", "age": 36, "country": "GB", "newsletter": true, "tags": ["math"]}},
+           "diff": []},
+          {"case_id": "normalize_coerces_numeric_strings", "category": "coercion", "passed": true,
+           "source": {"status": 200, "json": {"name": "Ada", "email": "ada@example.com", "age": 42, "country": "GB", "newsletter": true, "tags": []}},
+           "target": {"status": 200, "json": {"name": "Ada", "email": "ada@example.com", "age": 42, "country": "GB", "newsletter": true, "tags": []}},
+           "diff": []},
+          {"case_id": "normalize_applies_defaults", "category": "defaults", "passed": true,
+           "source": {"status": 200, "json": {"name": "Grace Hopper", "email": "grace@example.com", "age": 4, "country": "US", "newsletter": false, "tags": []}},
+           "target": {"status": 200, "json": {"name": "Grace Hopper", "email": "grace@example.com", "age": 4, "country": "US", "newsletter": false, "tags": []}},
+           "diff": []},
+          {"case_id": "normalize_trims_and_lowercases_email", "category": "transform", "passed": true,
+           "source": {"status": 200, "json": {"name": "Ada", "email": "ada@x.io", "age": 36, "country": "US", "newsletter": false, "tags": []}},
+           "target": {"status": 200, "json": {"name": "Ada", "email": "ada@x.io", "age": 36, "country": "US", "newsletter": false, "tags": []}},
+           "diff": []},
+          {"case_id": "normalize_rejects_invalid_payload_with_422", "category": "error-status", "passed": false,
+           "source": {"status": 422, "json": {"error": {"code": "VALIDATION_FAILED", "message": "Invalid profile payload", "details": [{"field": "name", "issue": "required"}, {"field": "age", "issue": "out_of_range"}]}}},
+           "target": {"status": 400, "json": {"success": false, "error": {"issues": [{"path": ["name"], "message": "Required"}, {"path": ["age"], "message": "Number must be greater than or equal to 0"}]}}},
+           "diff": ["status: source=422 target=400", "json.error.code: missing in target"]},
+          {"case_id": "validate_accepts_valid_payload", "category": "success", "passed": true,
+           "source": {"status": 200, "json": {"valid": true, "errors": []}},
+           "target": {"status": 200, "json": {"valid": true, "errors": []}},
+           "diff": []},
+          {"case_id": "validate_missing_required_field_returns_422", "category": "error-schema", "passed": false,
+           "source": {"status": 422, "json": {"error": {"code": "VALIDATION_FAILED", "message": "Invalid profile payload", "details": [{"field": "email", "issue": "required"}]}}},
+           "target": {"status": 400, "json": {"success": false, "error": {"issues": [{"path": ["email"], "message": "Required"}]}}},
+           "diff": ["status: source=422 target=400", "json.error.code: missing in target"]},
+          {"case_id": "validate_uncoercible_age_returns_422", "category": "error-schema", "passed": false,
+           "source": {"status": 422, "json": {"error": {"code": "VALIDATION_FAILED", "message": "Invalid profile payload", "details": [{"field": "age", "issue": "not_coercible"}]}}},
+           "target": {"status": 400, "json": {"success": false, "error": {"issues": [{"path": ["age"], "message": "Expected number, received nan"}]}}},
+           "diff": ["status: source=422 target=400", "json.error.code: missing in target"]},
+          {"case_id": "get_profile_found", "category": "success", "passed": true,
+           "source": {"status": 200, "json": {"id": "p_001", "name": "Ada Lovelace", "email": "ada@example.com", "age": 36, "country": "GB", "newsletter": true, "tags": ["math", "computing"]}},
+           "target": {"status": 200, "json": {"id": "p_001", "name": "Ada Lovelace", "email": "ada@example.com", "age": 36, "country": "GB", "newsletter": true, "tags": ["math", "computing"]}},
+           "diff": []},
+          {"case_id": "get_profile_not_found_returns_nested_404", "category": "error-schema", "passed": false,
+           "source": {"status": 404, "json": {"error": {"code": "NOT_FOUND", "message": "Profile not found", "details": [{"field": "id", "issue": "not_found"}]}}},
+           "target": {"status": 404, "json": {"error": "Not found"}},
+           "diff": ["json.error.code: missing in target", "json.error.message: missing in target"]}
+        ]
+      }
+    },
+    {
+      "artifact_id": "art_diag0000009",
+      "run_id": "run_9f8e7d6c5b4a",
+      "kind": "diagnosis",
+      "attempt": 1,
+      "created_at": "2026-09-26T12:23:00+00:00",
+      "content": {
+        "run_id": "run_9f8e7d6c5b4a",
+        "attempt": 1,
+        "categories": ["error_status_and_schema"],
+        "failed_case_ids": [
+          "normalize_rejects_invalid_payload_with_422",
+          "validate_missing_required_field_returns_422",
+          "validate_uncoercible_age_returns_422",
+          "get_profile_not_found_returns_nested_404"
+        ],
+        "rationale": "Idiomatic Hono/zod returns 400 with a flat issues array, while the source returns 422 (validation) or 404 (missing) with a nested {error:{code,message,details}} body."
+      }
+    },
+    {
+      "artifact_id": "art_cand0000009",
+      "run_id": "run_9f8e7d6c5b4a",
+      "kind": "candidate_policy",
+      "attempt": 1,
+      "created_at": "2026-09-26T12:23:30+00:00",
+      "content": {
+        "name": "flask-to-hono",
+        "version": 2,
+        "status": "candidate",
+        "body": "# flask-to-hono policy v2\n\nAll of v1, plus legacy error-compatibility rules.",
+        "rules": [
+          "Return HTTP 422 (not 400) for every validation failure.",
+          "Emit the nested error body exactly as SPEC.md defines.",
+          "Unknown profile ids return the nested 404 body."
+        ],
+        "parent_version": 1,
+        "rationale": "error_status_and_schema across cases 5,7,8,10.",
+        "decision": null
+      }
+    }
+  ],
+  "events": [
+    {"run_id": "run_9f8e7d6c5b4a", "type": "checkpoint", "milestone": "source_analysis", "payload": {"note": "analyzed Flask source: 3 routes, coercion + defaults + nested errors"}, "ts": "2026-09-26T12:20:30+00:00", "seq": 1},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "tool_call", "milestone": "generation", "payload": {"tool": "generate_target", "policy_version": 1}, "ts": "2026-09-26T12:21:00+00:00", "seq": 2},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "tool_result", "milestone": "generation", "payload": {"note": "wrote target attempt-1-policy-v1; tsc --noEmit clean"}, "ts": "2026-09-26T12:21:40+00:00", "seq": 3},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "checkpoint", "milestone": "generation", "payload": {"note": "target v1 generated and boots"}, "ts": "2026-09-26T12:21:45+00:00", "seq": 4},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "tool_call", "milestone": "test", "payload": {"tool": "run_contract_tests", "attempt": 1}, "ts": "2026-09-26T12:22:00+00:00", "seq": 5},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "tool_result", "milestone": "test", "payload": {"note": "attempt 1 under v1: 6/10"}, "ts": "2026-09-26T12:22:20+00:00", "seq": 6},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "failure", "milestone": "test", "payload": {"note": "4 cases failed: 422/404 nested vs 400/404 flat"}, "ts": "2026-09-26T12:22:25+00:00", "seq": 7},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "checkpoint", "milestone": "test", "payload": {"note": "test evidence persisted"}, "ts": "2026-09-26T12:22:30+00:00", "seq": 8},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "decision", "milestone": "diagnosis", "payload": {"note": "category=error_status_and_schema"}, "ts": "2026-09-26T12:23:00+00:00", "seq": 9},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "checkpoint", "milestone": "candidate_policy", "payload": {"note": "candidate v2 created with parent_version=1"}, "ts": "2026-09-26T12:23:30+00:00", "seq": 10},
+    {"run_id": "run_9f8e7d6c5b4a", "type": "checkpoint", "milestone": "candidate_policy", "payload": {"note": "paused after candidate_policy (--pause-after candidate_policy)"}, "ts": "2026-09-26T12:23:31+00:00", "seq": 11}
+  ]
+}
