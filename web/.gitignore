@@ -1,0 +1,39 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# testing / coverage
+/coverage
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# The repo root .gitignore has broad `lib/` and `runs/` patterns (for the
+# Python package layout) that also match these paths under web/. Un-ignore
+# them here since this directory owns its own app/lib structure.
+!/lib/
+!/lib/**
+!/app/runs/
+!/app/runs/**

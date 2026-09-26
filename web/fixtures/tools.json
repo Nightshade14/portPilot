@@ -1,0 +1,126 @@
+{
+  "survey_flask_app": [
+    {
+      "name": "survey_flask_app",
+      "version": 1,
+      "description": "Extracts routes and dataclass models from a Flask application tree.",
+      "when_to_use": "At the start of a Flask-to-anything port, before writing any target code.",
+      "input_schema": { "type": "object", "properties": { "path": { "type": "string" } }, "required": ["path"] },
+      "output_schema": { "type": "object", "properties": { "routes": { "type": "array" }, "models": { "type": "array" } } },
+      "files": {
+        "main.py": "def run(params: dict) -> dict:\n    path = params[\"path\"]\n    # walk `path`, collect @app.route decorators and dataclasses\n    return {\"routes\": [], \"models\": []}\n"
+      },
+      "tests": {
+        "test_main.py": "from main import run\n\n\ndef test_run_returns_shape():\n    result = run({\"path\": \".\"})\n    assert \"routes\" in result\n    assert \"models\" in result\n"
+      },
+      "requires_cli": ["python"],
+      "tags": ["flask", "survey", "static-analysis"],
+      "status": "active",
+      "provenance": { "run_id": "run_completed001", "step_id": "step_completed001_01", "repo_url": "https://github.com/acme/flask-profile-api", "parent_version": null, "author": "agent" },
+      "stats": { "uses": 1, "successes": 1, "failures": 0, "runs_used_in": ["run_completed001"] },
+      "created_at": "2026-09-25T10:01:20+00:00"
+    }
+  ],
+  "port_flask_route": [
+    {
+      "name": "port_flask_route",
+      "version": 1,
+      "description": "Translates a single Flask route function into an equivalent Hono handler.",
+      "when_to_use": "For each Flask route being ported to a Hono/TypeScript service.",
+      "input_schema": { "type": "object", "properties": { "route": { "type": "string" }, "hint": { "type": "string" } }, "required": ["route"] },
+      "output_schema": { "type": "object", "properties": { "file": { "type": "string" }, "diff": { "type": "string" } } },
+      "files": {
+        "main.py": "def run(params: dict) -> dict:\n    route = params[\"route\"]\n    # generate a Hono handler matching the Flask route's behavior\n    return {\"file\": \"src/routes/profile.ts\", \"diff\": \"\"}\n"
+      },
+      "tests": {
+        "test_main.py": "from main import run\n\n\ndef test_run_returns_file():\n    result = run({\"route\": \"GET /profile/<id>\"})\n    assert result[\"file\"].endswith(\".ts\")\n"
+      },
+      "requires_cli": ["node", "npm"],
+      "tags": ["hono", "typescript", "port"],
+      "status": "active",
+      "provenance": { "run_id": "run_completed001", "step_id": "step_completed001_02", "repo_url": "https://github.com/acme/flask-profile-api", "parent_version": null, "author": "agent" },
+      "stats": { "uses": 2, "successes": 2, "failures": 1, "runs_used_in": ["run_completed001"] },
+      "created_at": "2026-09-25T10:07:20+00:00"
+    }
+  ],
+  "run_hono_smoke_test": [
+    {
+      "name": "run_hono_smoke_test",
+      "version": 1,
+      "description": "Starts a local Hono server and exercises each route once.",
+      "when_to_use": "After porting routes, to check basic end-to-end behavior.",
+      "input_schema": { "type": "object", "properties": { "port": { "type": "integer" } } },
+      "output_schema": { "type": "object", "properties": { "passed": { "type": "integer" }, "failed": { "type": "integer" } } },
+      "files": { "main.py": "def run(params: dict) -> dict:\n    return {\"passed\": 0, \"failed\": 0}\n" },
+      "tests": {},
+      "requires_cli": ["node"],
+      "tags": ["hono", "testing"],
+      "status": "deprecated",
+      "provenance": { "run_id": null, "step_id": null, "repo_url": null, "parent_version": null, "author": "seed" },
+      "stats": { "uses": 3, "successes": 3, "failures": 0, "runs_used_in": ["run_seed000"] },
+      "created_at": "2026-09-20T09:00:00+00:00"
+    },
+    {
+      "name": "run_hono_smoke_test",
+      "version": 2,
+      "description": "Starts a local Hono server and exercises each route once, with response-shape assertions.",
+      "when_to_use": "After porting routes, to check both reachability and response-shape parity.",
+      "input_schema": { "type": "object", "properties": { "port": { "type": "integer" } } },
+      "output_schema": { "type": "object", "properties": { "passed": { "type": "integer" }, "failed": { "type": "integer" } } },
+      "files": { "main.py": "def run(params: dict) -> dict:\n    port = params.get(\"port\", 8787)\n    # start server on `port`, hit each route, assert shape\n    return {\"passed\": 0, \"failed\": 0}\n" },
+      "tests": {
+        "test_main.py": "from main import run\n\n\ndef test_run_returns_counts():\n    result = run({\"port\": 8787})\n    assert \"passed\" in result\n"
+      },
+      "requires_cli": ["node"],
+      "tags": ["hono", "testing"],
+      "status": "active",
+      "provenance": { "run_id": "run_completed001", "step_id": "step_completed001_04", "repo_url": "https://github.com/acme/flask-profile-api", "parent_version": 1, "author": "agent" },
+      "stats": { "uses": 4, "successes": 4, "failures": 0, "runs_used_in": ["run_seed000", "run_completed001"] },
+      "created_at": "2026-09-25T10:29:35+00:00"
+    }
+  ],
+  "analyze_dockerfile_layers": [
+    {
+      "name": "analyze_dockerfile_layers",
+      "version": 1,
+      "description": "Reports per-layer size and a CVE scan summary for a Dockerfile-built image.",
+      "when_to_use": "To measure a baseline before optimizing, or to compare against a recorded baseline.",
+      "input_schema": { "type": "object", "properties": { "dockerfile": { "type": "string" }, "compare_to": { "type": "string" } }, "required": ["dockerfile"] },
+      "output_schema": { "type": "object", "properties": { "size_mb": { "type": "number" }, "layers": { "type": "integer" }, "cves": { "type": "integer" } } },
+      "files": {
+        "main.py": "def run(params: dict) -> dict:\n    dockerfile = params[\"dockerfile\"]\n    # docker build + trivy scan, return metrics\n    return {\"size_mb\": 0, \"layers\": 0, \"cves\": 0}\n"
+      },
+      "tests": {
+        "test_main.py": "from main import run\n\n\ndef test_run_returns_metrics():\n    result = run({\"dockerfile\": \"Dockerfile\"})\n    assert \"size_mb\" in result\n"
+      },
+      "requires_cli": ["docker", "trivy"],
+      "tags": ["docker", "security", "audit"],
+      "status": "active",
+      "provenance": { "run_id": "run_running002", "step_id": "step_running002_01", "repo_url": "https://github.com/acme/orders-service", "parent_version": null, "author": "agent" },
+      "stats": { "uses": 2, "successes": 1, "failures": 0, "runs_used_in": ["run_running002"] },
+      "created_at": "2026-09-26T18:21:40+00:00"
+    }
+  ],
+  "rewrite_dockerfile_multistage": [
+    {
+      "name": "rewrite_dockerfile_multistage",
+      "version": 1,
+      "description": "Generates a multi-stage variant from a single-stage Dockerfile, splitting build and runtime dependencies.",
+      "when_to_use": "When a single-stage Dockerfile carries build-only tools into the runtime image.",
+      "input_schema": { "type": "object", "properties": { "dockerfile": { "type": "string" } }, "required": ["dockerfile"] },
+      "output_schema": { "type": "object", "properties": { "dockerfile": { "type": "string" } } },
+      "files": {
+        "main.py": "def run(params: dict) -> dict:\n    dockerfile = params[\"dockerfile\"]\n    # rewrite into build+runtime stages\n    return {\"dockerfile\": dockerfile}\n"
+      },
+      "tests": {
+        "test_main.py": "from main import run\n\n\ndef test_run_returns_dockerfile():\n    result = run({\"dockerfile\": \"Dockerfile\"})\n    assert \"dockerfile\" in result\n"
+      },
+      "requires_cli": ["docker"],
+      "tags": ["docker", "optimization"],
+      "status": "active",
+      "provenance": { "run_id": "run_running002", "step_id": "step_running002_02", "repo_url": "https://github.com/acme/orders-service", "parent_version": null, "author": "agent" },
+      "stats": { "uses": 1, "successes": 1, "failures": 0, "runs_used_in": ["run_running002"] },
+      "created_at": "2026-09-26T18:26:20+00:00"
+    }
+  ]
+}
