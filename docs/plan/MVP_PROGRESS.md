@@ -99,6 +99,6 @@ The durable state of the parent orchestrator, used to resume after context compa
 | Lane | Agent id | Worktree / branch | Status |
 |---|---|---|---|
 | T Tool library | 1f7a76c3 | ../portPilot-mvp-t / mvp/t | running |
-| P API + worker | adb65e6f | ../portPilot-mvp-p / mvp/p | running |
+| P API + worker | adb65e6f | ../portPilot-mvp-p / mvp/p | merged (4259f98); 63 tests; real-HTTP smoke passes |
 
 After A, T, P: Lead writes agent/deps.build_deps wiring (store.v2, knowledge, sandbox, toollib, author_tool, shell_guard, render_markdown, AtlasSessionRepository, AtlasStorage), then integration slices (Sync 2-4).
