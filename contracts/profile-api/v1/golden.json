@@ -1,0 +1,134 @@
+{
+  "normalize_happy_path": {
+    "status": 200,
+    "json": {
+      "name": "Ada Lovelace",
+      "email": "ada@example.com",
+      "age": 36,
+      "country": "GB",
+      "newsletter": true,
+      "tags": [
+        "math"
+      ]
+    }
+  },
+  "normalize_coerces_numeric_strings": {
+    "status": 200,
+    "json": {
+      "name": "Ada",
+      "email": "ada@example.com",
+      "age": 42,
+      "country": "GB",
+      "newsletter": true,
+      "tags": []
+    }
+  },
+  "normalize_applies_defaults": {
+    "status": 200,
+    "json": {
+      "name": "Grace Hopper",
+      "email": "grace@example.com",
+      "age": 4,
+      "country": "US",
+      "newsletter": false,
+      "tags": []
+    }
+  },
+  "normalize_trims_and_lowercases_email": {
+    "status": 200,
+    "json": {
+      "name": "Ada",
+      "email": "ada@x.io",
+      "age": 36,
+      "country": "US",
+      "newsletter": false,
+      "tags": []
+    }
+  },
+  "normalize_rejects_invalid_payload_with_422": {
+    "status": 422,
+    "json": {
+      "error": {
+        "code": "VALIDATION_FAILED",
+        "message": "Invalid profile payload",
+        "details": [
+          {
+            "field": "name",
+            "issue": "required"
+          },
+          {
+            "field": "age",
+            "issue": "out_of_range"
+          }
+        ]
+      }
+    }
+  },
+  "validate_accepts_valid_payload": {
+    "status": 200,
+    "json": {
+      "valid": true,
+      "errors": []
+    }
+  },
+  "validate_missing_required_field_returns_422": {
+    "status": 422,
+    "json": {
+      "error": {
+        "code": "VALIDATION_FAILED",
+        "message": "Invalid profile payload",
+        "details": [
+          {
+            "field": "email",
+            "issue": "required"
+          }
+        ]
+      }
+    }
+  },
+  "validate_uncoercible_age_returns_422": {
+    "status": 422,
+    "json": {
+      "error": {
+        "code": "VALIDATION_FAILED",
+        "message": "Invalid profile payload",
+        "details": [
+          {
+            "field": "age",
+            "issue": "not_coercible"
+          }
+        ]
+      }
+    }
+  },
+  "get_profile_found": {
+    "status": 200,
+    "json": {
+      "id": "p_001",
+      "name": "Ada Lovelace",
+      "email": "ada@example.com",
+      "age": 36,
+      "country": "GB",
+      "newsletter": true,
+      "tags": [
+        "math",
+        "computing"
+      ]
+    }
+  },
+  "get_profile_not_found_returns_nested_404": {
+    "status": 404,
+    "json": {
+      "error": {
+        "code": "NOT_FOUND",
+        "message": "Profile not found",
+        "details": [
+          {
+            "field": "id",
+            "issue": "not_found"
+          }
+        ]
+      }
+    }
+  }
+}
