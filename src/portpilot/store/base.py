@@ -62,6 +62,12 @@ class Store(Protocol):
 
     def latest_artifact(self, run_id: str, kind: ArtifactKind) -> dict[str, Any] | None: ...
 
+    def artifacts(
+        self, run_id: str, kind: ArtifactKind | None = None, attempt: int | None = None
+    ) -> list[dict[str, Any]]:
+        """All matching artifacts for the run, ascending by created_at."""
+        ...
+
     # --- policies -------------------------------------------------------
     def get_policy(self, name: str, version: int | None = None) -> Policy:
         """version=None returns the single policy with status="active". Raises NotFound."""

@@ -45,6 +45,11 @@ class InMemoryStore:
     def latest_artifact(self, run_id: str, kind: ArtifactKind) -> dict[str, Any] | None:
         raise NotImplementedError
 
+    def artifacts(
+        self, run_id: str, kind: ArtifactKind | None = None, attempt: int | None = None
+    ) -> list[dict[str, Any]]:
+        raise NotImplementedError
+
     def get_policy(self, name: str, version: int | None = None) -> Policy:
         raise NotImplementedError
 

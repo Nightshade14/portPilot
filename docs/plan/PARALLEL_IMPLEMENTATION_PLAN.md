@@ -176,6 +176,9 @@ Atlas collections (the charter's names): `migration_runs`, `milestones`, `artifa
 ### 4.4a Additions made while scaffolding (T+0:20, now frozen too)
 
 - `Store.list_policies(name) -> list[Policy]` (ascending), for `portpilot policies` and the v1-vs-v2 view.
+- `Store.artifacts(run_id, kind=None, attempt=None) -> list[dict]` (ascending), so `evaluate_policy` can fetch a specific attempt's `test_output`.
+- Cross-lane entry points: Lane A exposes `portpilot.contracts.cli.contracts_command(source_only, target) -> int`; Lane B exposes `portpilot.store.seed.seed_policy(store, path) -> Policy`. Lane E's `cli.py` calls both through lazy imports.
+- Store conventions: run ids are `run_<12 hex>`; returned docs are plain dicts with no Mongo `_id`; timestamps are timezone-aware UTC `datetime`s.
 - `models.Decision`: the typed return of `evaluate_policy` (baseline/candidate passed counts, `regressions`, `fixed`, `promoted`, `reason`). `Policy` gained an optional `decision` field.
 - `harness/context.py`: `bind(store)` / `ctx()`. Tools keep the exact 4.5 signatures and get the store from here. Tests call `bind(InMemoryStore())`.
 - `cases.json` cases carry `expect_status` (source-only sanity check). Full fixture behavior, error ordering and messages are in `contracts/profile-api/v1/SPEC.md`.
