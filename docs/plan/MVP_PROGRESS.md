@@ -51,7 +51,7 @@ The durable state of the parent orchestrator, used to resume after context compa
 
 | Lane | Agent id | Worktree / branch | Status |
 |---|---|---|---|
-| M Mongo state | 75cf03ed | ../portPilot-mvp-m / mvp/m | running |
+| M Mongo state | 75cf03ed | ../portPilot-mvp-m / mvp/m | merged (ae02bba); 92 mongo contract tests green |
 | K Knowledge | 7ce04612 | ../portPilot-mvp-k / mvp/k | merged (3be9c91); live Atlas+Voyage test passed; 2 prod indexes exist on portpilot_mvp.knowledge |
 | S Sandbox | ef1f1afd | ../portPilot-mvp-s / mvp/s | running |
 | E Evals | 0fc24161 | ../portPilot-mvp-e / mvp/e | merged (a3daada); baselines E2 424MB 228 CRIT, E3 441MB 227 CRIT |
